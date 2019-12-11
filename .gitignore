@@ -1,0 +1,43 @@
+# Build and Release Folders
+bin/
+bin-debug/
+bin-release/
+
+# Other files and folders
+.settings/
+.idea/
+.idea/workspace.xml
+.DS_Store
+.ipynb
+
+# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
+# should NOT be excluded as they contain compiler settings and other important
+# information for Eclipse / Flash Builder.
+
+# Mac OSX
+.DS_Store
+.AppleDouble
+.LSOverride
+tmp
+
+# Development (IDE)
+.idea
+.ipynb
+
+# Dependency Directory
+# https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
+node_modules
+bower_components
+app/jspm_packages
+
+# Compilations
+scss/*.css
+scss/*.css.map
+.sass-cache
+
+# logs
+logs/*
+*.log
+npm-debug.log*
+
+!.gitkeep
