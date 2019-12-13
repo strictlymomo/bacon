@@ -1,7 +1,9 @@
 async function init() {
     // Prysm API
     const BASE_URL = "https://api.prylabs.net/eth/v1alpha1";
-    const POLL_INVERTAL = 12000;
+    const NORMAL_INTERVAL = 12000;
+    const SLEEP_INTERVAL = 1000;
+    let pollInterval = NORMAL_INTERVAL;
 
     const CHAINHEAD = {
         URL: "/beacon/chainhead",
@@ -9,13 +11,10 @@ async function init() {
             let chainhead = await fetch(`${BASE_URL}${this.URL}`)
                 .then(response => response.json())
                 .then(data => data);
-            return chainhead;    
-        },
-        getHeadBlockRoot: async function () {
-            return base64toHEX((await this.getChainhead()).headBlockRoot);
+            return chainhead;
         },
         getHeadSlot: async function () {
-            return (await this.getChainhead()).headSlot;
+            return parseInt((await this.getChainhead()).headSlot);
         }
     }
 
@@ -24,85 +23,129 @@ async function init() {
         getBlock: async function (param) {
             return await fetch(`${BASE_URL}${this.URL}${param}`)
                 .then(response => response.json())
-                .then(data => (data.blockContainers.length === 1) ? data.blockContainers[0] : data.blockContainers);
-        }
+                .then(data => (data.blockContainers.length === 1) ? data.blockContainers[0] : null);
+        },
     }
 
     let status = {
         headBlockRoot: "",
         headSlot: "",
-        previous_headBlockRoot: "",
-        previous_headSlot: "",
+        previousBlockRoot: "",
+        previousSlot: "",
         currentBlock: {},
-        currentBlocks: [],
+        gapBlock: {},
         nodes: [],
         edges: []
     }
 
     // Start
     await getInitial();
-    
+
     // TODO: render chainhead, epoch, block, etc.
-    
+
     // Poll for updates
-    setInterval(() => poll(), POLL_INVERTAL);
+    let poller = setInterval(() => poll(), pollInterval);
 
     async function getInitial() {
-        
-        console.log("GETTING INITIAL ==============================");
-        
-        // Get Blockroot from Chainhead 
+
+        console.log("=========================== GETTING INITIAL");
+
+        // Get Current Slot
         status.headSlot = await CHAINHEAD.getHeadSlot();
-        status.headBlockRoot = await CHAINHEAD.getHeadBlockRoot();
         console.log("%cHead Slot:                 ", "font-weight: bold", status.headSlot);
-        console.log("%cHead Block Root:           ", "font-weight: bold", status.headBlockRoot);
-            
-        // Get Block(s) ?
+
+        // Get Block
         status.currentBlock = await BLOCKS.getBlock(status.headSlot);
         
-        // Push to nodes/edges
-        status.nodes.push({"id": base64toHEX(status.currentBlock.blockRoot), "group": "Proposed"});
-        // console.log("nodes:", status.nodes);
+        if (status.currentBlock) {
+            console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(status.currentBlock.blockRoot));
+        } else {
+            console.log("No block");
+            do {
+                let keepGetting = setInterval(() => getInitial(), pollInterval);
+                console.log("getting...");
+            } while (status.currentBlock === null);
+            clearInterval(keepGetting);
+            console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(status.currentBlock.blockRoot));
+        }
+
+        // TODO: Push to nodes/edges
     }
 
     async function getLatest() {
-        
-        console.log("==============================");
-        
+
+        console.log("===========================");
+
         // Update previous
-        status.previous_headBlockRoot = status.headBlockRoot;
-        status.previous_headSlot = status.headSlot;
-        
-        // Get Blockroot from Chainhead 
+        status.previousSlot = status.headSlot;
+        status.previousBlockRoot = status.headBlockRoot;
+
+        // Get Current Slot
         status.headSlot = await CHAINHEAD.getHeadSlot();
-        console.log("%cprevious:                  ", "font-weight: bold", status.previous_headSlot);
+
+        console.log("%cPrev Slot:                 ", "font-weight: bold", status.previousSlot);
         console.log("%cHead Slot:                 ", "font-weight: bold", status.headSlot);
-        status.headBlockRoot = await CHAINHEAD.getHeadBlockRoot();
-        console.log("%cprevious:                  ", "font-weight: bold", status.previous_headBlockRoot);
-        console.log("%cHead Block Root:           ", "font-weight: bold", status.headBlockRoot);
         
-        // Get Block(s) ?
-        status.currentBlock = await BLOCKS.getBlock(status.headSlot);
-
-        // CONDITIONALS
-        /*
-        Slot === consecutive
+        // Compare
+        let difference = status.headSlot - status.previousSlot;
+        console.log("%cDifference:                ", "font-weight: bold", difference);
         
-        Slot !== consecutive
+        if (difference === 0) {
+            console.log("%c                            CLIENT IS NOT UP TO DATE. SLEEP ANOTHER INTERVAL", "color: orange");
+            
+            // TODO: SPEED UP THE POLLER TO CHECK FOR NEW SLOT FASTER SO WE DON'T LAG
 
-        */
-        if (status.previous_headBlockRoot === status.headBlockRoot) {
-            console.log("%cCLIENT IS NOT UP TO DATE. SLEEP ANOTHER INVERVAL", "color: red");
-            // console.log("%cSAME BLOCK AS BEFORE. PUT INTO MISSING", "color: red");
-            // status.nodes.push({"id": base64toHEX(status.currentBlock.blockRoot), "group": "Missing"});
-            // console.log("nodes:", status.nodes);
-        } else {
+        } else if (difference > 1) {
+            console.log("%c                            GAP - COULD BE MISSING SLOTS... LET'S CHECK.", "color: red");
+            
+            let prev = status.previousSlot;
 
-        }
-        // Conditionals
-        // console.log("current block:", status.currentBlock);
-        // console.log("current block:", status.currentBlock.block);
-        // console.log("current blockRoot:", base64toHEX(status.currentBlock.blockRoot));
+            do {
+                console.log("GET:                       ", (prev + 1));
+                status.gapBlock = await BLOCKS.getBlock(prev + 1);
+
+                if (status.gapBlock) {
+                    console.log("block ?                    ", status.gapBlock);
+                    console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(status.gapBlock.blockRoot));
+                    // TO DO: push gapBlock to nodes
+                } else {
+                    console.log("block ?                    ", status.gapBlock);
+                    // block is missing
+                    // TO DO: missing block object to nodes
+                }
+                difference--;
+                prev++;
+            } while (difference > 1);
+
+            console.log("%c                            CAUGHT UP - GETTING NEXT BLOCK...", "color: green");
+            
+            status.previousBlockRoot = base64toHEX(status.currentBlock.blockRoot);
+            console.log("%cPrev  Root:                ", "font-weight: bold", status.previousBlockRoot);
+            
+            // Get Block
+            status.currentBlock = await BLOCKS.getBlock(status.headSlot);
+            if (status.currentBlock) {
+                console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(status.currentBlock.blockRoot));
+            } else if (status.currentBlock === null) {
+                console.log("No block");
+            }
+
+        } else if (difference === 1) {
+            console.log("%c                            GOOD - GETTING NEXT BLOCK...", "color: green");
+            
+            status.previousBlockRoot = base64toHEX(status.currentBlock.blockRoot);
+            console.log("%cPrev  Root:                ", "font-weight: bold", status.previousBlockRoot);
+            
+            // Get Block
+            status.currentBlock = await BLOCKS.getBlock(status.headSlot);
+            if (status.currentBlock) {
+                console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(status.currentBlock.blockRoot));
+                // TO DO: push block to nodes
+            } else if (status.currentBlock === null) {
+                console.log("No block");
+                // TO DO: push missing to nodes
+            }
+        } 
     }
 
     async function poll() {
@@ -119,7 +162,6 @@ async function init() {
         }
         return hex;
     }
-
 }
 
 init();
