@@ -2,8 +2,7 @@
 
 function realTimeChartMulti() {
 
-	let version = "0.1.0",
-		datum, data,
+	let datum, data,
 		maxSeconds = 300, pixelsPerSecond = 10,
 		svgWidth = 700, svgHeight = 300,
 		margin = { top: 20, bottom: 20, left: 100, right: 30, topNav: 10, bottomNav: 20 },
@@ -27,7 +26,9 @@ function realTimeChartMulti() {
 		svg,
 		backgroundColor;
 
-	// create the chart
+	/* 	====================================================================================
+		create the chart
+		==================================================================================== */	
 	let chart = function (s) {
 		selection = s;
 		if (selection == undefined) {
@@ -87,12 +88,23 @@ function realTimeChartMulti() {
 			.attr("height", height)
 			.style("fill", backgroundColor);
 
-		// note that two groups are created here, the latter assigned to barG;
+		
+		/* 	====================================================================================
+			create groups
+			==================================================================================== */
+
+		// note that two groups are created here, the latter assigned to blocksG;
 		// the former will contain a clip path to constrain objects to the chart area; 
 		// no equivalent clip path is created for the nav chart as the data itself
 		// is clipped to the full time domain
-		let barG = main.append("g")
-			.attr("class", "barGroup")
+		let epochsG = main.append("g")
+			.attr("class", "epochsGroup")
+			.attr("transform", "translate(0, 0)")
+			.attr("clip-path", "url(#myClip")
+			.append("g");
+
+		let blocksG = main.append("g")
+			.attr("class", "blocksGroup")
 			.attr("transform", "translate(0, 0)")
 			.attr("clip-path", "url(#myClip")
 			.append("g");
@@ -243,8 +255,14 @@ function realTimeChartMulti() {
 		data = [];
 		refresh();
 
-		// function to refresh the viz upon changes of the time domain 
-		// (which happens constantly), or after arrival of new data, or at init
+		
+		/* 	====================================================================================
+			function to refresh the viz upon changes of the time domain 
+			- happens constantly, or 
+			- after arrival of new data, or
+			- at init
+			==================================================================================== */
+
 		function refresh() {
 
 			// process data to remove too late data items 
@@ -255,6 +273,10 @@ function realTimeChartMulti() {
 			// determine number of categories
 			let categoryCount = yDomain.length;
 			if (debug) console.log("yDomain", yDomain)
+
+			/* 	====================================================================================
+				EPOCHS
+				==================================================================================== */
 
 			/*
 			here we bind the new data to the main chart
@@ -275,14 +297,71 @@ function realTimeChartMulti() {
 			exited
 			*/
 
-			let updateSel = barG.selectAll(".bar")
-				.data(data);
+			let updateEpochsSel = epochsG.selectAll(".bar")
+				.data(data.filter(d => d.category === "Epochs"));
 
 			// remove items
-			updateSel.exit().remove();
+			updateEpochsSel.exit().remove();
 
 			// add items
-			updateSel.enter()
+			let epochsGroup = updateEpochsSel.enter()
+				.append("g")
+				.attr("class", "bar")
+				.attr("id", function () {
+					return "bar-" + barId++;
+				})
+				.html(function(d) {
+					console.log("d", d);
+						return `
+						<line 
+								x1="1" 
+								x2="1" 
+								y1="${-(y(d.category) * 2)}"
+								y2="${0}"
+								stroke="${(d.color || "black")}"
+								stroke-opacity="${(d.opacity || 1)}"
+								stroke-dasharray="3,6"
+							></line>
+						<text x="6" y="-${"1em"}" font-size=".71em">Epoch</text>	
+						<text x="6" y="0" font-size=".71em">${d.label}</text>	
+						`
+				});
+
+			updateEpochsSel
+				.attr("transform", function(d) {
+					let retValX = Math.round(x(d.time));
+					let retValY = y(d.category);
+					return `translate(${retValX},${retValY})`;
+				});
+			
+			/* 	====================================================================================
+				BLOCKS
+				==================================================================================== */
+
+			/*
+			here we bind the new data to the main chart
+			
+			note: no key function is used here; 
+			- therefore the data binding is by index, which effectivly means that available DOM elements
+			are associated with each item in the available data array, from 
+			first to last index; if the new data array contains fewer elements
+			than the existing DOM elements, the LAST DOM elements are removed;
+			
+			- basically, for each step, the data items "walks" leftward (each data 
+			item occupying the next DOM element to the left);
+			
+			- This data binding is very different from one that is done with a key 
+			function; in such a case, a data item stays "resident" in the DOM
+			element, and such DOM element (with data) would be moved left, until
+			the x position is to the left of the chart, where the item would be 
+			exited
+			*/	
+
+			let updateBlocksSel = blocksG.selectAll(".bar")
+				.data(data.filter(d => d.category === "Blocks"));
+			
+			// add items
+			updateBlocksSel.enter()
 				.append(function (d) {
 					if (debug) { console.log("d", JSON.stringify(d)); }
 					if (d.type == undefined) console.error(JSON.stringify(d))
@@ -295,8 +374,11 @@ function realTimeChartMulti() {
 					return "bar-" + barId++;
 				});
 
+			// remove items
+			updateBlocksSel.exit().remove();	
+
 			// update items; added items are now part of the update selection
-			updateSel
+			updateBlocksSel
 				.attr("x", function (d) {
 					let retVal = null;
 					let size = d.size || 6;
@@ -304,9 +386,6 @@ function realTimeChartMulti() {
 						case "Blocks":
 							retVal = Math.round(x(d.time) - size / 2);
 							break;
-						case "Epochs":
-							retVal = Math.round(x(d.time) - size / 2);
-							break;	
 						default:
 					}
 					return retVal;
@@ -318,61 +397,6 @@ function realTimeChartMulti() {
 						case "Blocks":
 							retVal = y(d.category) - (y(d.category) / 2);
 							break;
-						case "Epochs":
-							retVal = y(d.category) - (y(d.category) / 2);
-							break;	
-						default:
-					}
-					return retVal;
-				})
-				.attr("x1", function (d) {
-					let retVal = null;
-					let size = d.size || 6;
-					switch (d.category) {
-						case "Blocks":
-							// retVal = Math.round(x(d.time) - size / 2);
-							break;
-						case "Epochs":
-							retVal = Math.round(x(d.time));
-							break;	
-						default:
-					}
-					return retVal;
-				})
-				.attr("y1", function (d) {
-					let retVal = null;					
-					switch (d.category) {
-						case "Blocks":
-							break;
-						case "Epochs":
-							retVal = y(d.category);
-							break;	
-						default:
-					}
-					return retVal;
-				})
-				.attr("x2", function (d) {
-					let retVal = null;
-					let size = d.size || 6;
-					switch (d.category) {
-						case "Blocks":
-							break;
-						case "Epochs":
-							retVal = Math.round(x(d.time));
-							break;	
-						default:
-					}
-					return retVal;
-				})
-				.attr("y2", function (d) {
-					let retVal = null;
-					let size = d.size || 6;
-					switch (d.category) {
-						case "Blocks":
-							break;
-						case "Epochs":
-							retVal = y(d.category) - (y(d.category));
-							break;	
 						default:
 					}
 					return retVal;
@@ -381,9 +405,6 @@ function realTimeChartMulti() {
 					let retVal = null;
 					switch (d.category) {
 						case "Blocks":
-							retVal = Math.round(x(d.time));
-							break;
-						case "Epochs":
 							retVal = Math.round(x(d.time));
 							break;
 						default:	
@@ -396,9 +417,6 @@ function realTimeChartMulti() {
 						case "Blocks":
 							retVal = y(d.category);
 							break;
-						case "Epochs":
-							retVal = y(d.category);
-							break;	
 						default:
 					}
 					return retVal;
@@ -408,10 +426,7 @@ function realTimeChartMulti() {
 					switch (d.category) {
 						case "Blocks":
 							retVal = d.size / 2;
-							break;
-							case "Epochs":
-								retVal = d.size / 2;
-								break;		
+							break;	
 						default:
 					}
 					return retVal;
@@ -447,8 +462,6 @@ function realTimeChartMulti() {
 								retVal = "white"
 							};
 							break;
-						case "Epochs":
-							break;	
 						default:
 					}
 					return retVal;
@@ -461,35 +474,25 @@ function realTimeChartMulti() {
 						case "Blocks":
 							retVal = "1,2"
 							break;
-						case "Epochs":
-							retVal = "3,6"
-							break;
 						default:		
 					}
 					return retVal;
 				});
 
-			// updateSel.append(function(d) {
-			// 	if (d.category === "epoch" && d.label) {
-			// 		let node = document.createElementNS("http://www.w3.org/2000/svg", "text");
-			// 		return node;
-			// 	;}
-			// });
-
 			// create update selection for the nav chart, by applying data
-			let updateSelNav = navG.selectAll("circle")
+			let updateBlocksSelNav = navG.selectAll("circle")
 				.data(data);
 
 			// remove items
-			updateSelNav.exit().remove();
+			updateBlocksSelNav.exit().remove();
 
 			// add items
-			updateSelNav.enter().append("circle")
+			updateBlocksSelNav.enter().append("circle")
 				.attr("r", 1)
 				.attr("fill", "black")
 
 			// added items now part of update selection; set coordinates of points
-			updateSelNav
+			updateBlocksSelNav
 				.attr("cx", function (d) {
 					return Math.round(xNav(d.time));
 				})
@@ -506,7 +509,10 @@ function realTimeChartMulti() {
 		}
 
 
-		// function to keep the chart "moving" through time (right to left) 
+		/* 	====================================================================================
+			function to keep the chart "moving" through time (right to left) 
+			==================================================================================== */
+		
 		setInterval(function () {
 
 			if (halted) return;
@@ -545,7 +551,9 @@ function realTimeChartMulti() {
 	} // end chart function
 
 
-	// chart getters/setters
+	/* 	====================================================================================
+		chart getters/setters
+		==================================================================================== */
 
 	// new data item (this most recent item will appear 
 	// on the right side of the chart, and begin moving left)
@@ -633,9 +641,6 @@ function realTimeChartMulti() {
 		halted = _;
 		return chart;
 	}
-
-	// version
-	chart.version = version;
 
 	return chart;
 

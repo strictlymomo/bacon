@@ -146,7 +146,7 @@ async function initialize() {
 									color: "black",
 									opacity: Math.max(Math.random(), 0.3),
 									category: category,
-									type: "line",
+									type: "g",
 									size: Math.max(Math.round(Math.random() * 12), 4),
 									label: null
 								};
@@ -156,7 +156,7 @@ async function initialize() {
 									color: "white",
 									opacity: 1,
 									category: category,
-									type: "line",
+									type: "g",
 									size: Math.max(Math.round(Math.random() * 12), 4),
 									label: (d / 8).toString()
 								};
