@@ -7,7 +7,6 @@ function realTimeChartMulti() {
 		svgWidth = 700, svgHeight = 300,
 		margin = { top: 20, bottom: 20, left: 100, right: 30, topNav: 10, bottomNav: 20 },
 		dimension = { chartTitle: 20, xAxis: 20, yAxis: 20, xTitle: 20, yTitle: 20, navChart: 70 },
-		maxY = 100, minY = 0,
 		chartTitle, yTitle, xTitle,
 		drawXAxis = true, drawYAxis = true, drawNavChart = true,
 		border,
@@ -15,7 +14,6 @@ function realTimeChartMulti() {
 		barId = 0,
 		yDomain = [],
 		debug = false,
-		barWidth = 5,
 		halted = false,
 		x, y,
 		xNav, yNav,
@@ -28,7 +26,8 @@ function realTimeChartMulti() {
 
 	/* 	====================================================================================
 		create the chart
-		==================================================================================== */	
+		==================================================================================== */
+
 	let chart = function (s) {
 		selection = s;
 		if (selection == undefined) {
@@ -88,7 +87,7 @@ function realTimeChartMulti() {
 			.attr("height", height)
 			.style("fill", backgroundColor);
 
-		
+
 		/* 	====================================================================================
 			create groups
 			==================================================================================== */
@@ -108,6 +107,17 @@ function realTimeChartMulti() {
 			.attr("transform", "translate(0, 0)")
 			.attr("clip-path", "url(#myClip")
 			.append("g");
+		
+		let rootsG = main.append("g")
+			.attr("class", "rootsGroup")
+			.attr("transform", "translate(0, 0)")
+			.attr("clip-path", "url(#myClip")
+			.append("g");	
+
+
+		/* 	====================================================================================
+			create axes & labels
+			==================================================================================== */	
 
 		// add group for x axis
 		xAxisG = main.append("g")
@@ -254,7 +264,7 @@ function realTimeChartMulti() {
 		// initial invocation; update display
 		data = [];
 		refresh();
-		
+
 		/* 	====================================================================================
 			function to refresh the viz upon changes of the time domain 
 			- happens constantly, or 
@@ -303,15 +313,15 @@ function realTimeChartMulti() {
 			updateEpochsSel.exit().remove();
 
 			// add items
-			let epochsGroup = updateEpochsSel.enter()
+			updateEpochsSel.enter()
 				.append("g")
 				.attr("class", "bar")
 				.attr("id", function () {
 					return "bar-" + barId++;
 				})
-				.html(function(d) {
-					console.log("d", d);
-						return `
+				.html(function (d) {
+					// console.log("d", d);
+					return `
 						<line 
 								x1="1" 
 								x2="1" 
@@ -327,161 +337,146 @@ function realTimeChartMulti() {
 				});
 
 			updateEpochsSel
-				.attr("transform", function(d) {
+				.attr("transform", function (d) {
 					let retValX = Math.round(x(d.time));
 					let retValY = y(d.category);
 					return `translate(${retValX},${retValY})`;
 				});
-			
+
 			/* 	====================================================================================
 				BLOCKS
 				==================================================================================== */
 
-			/*
-			here we bind the new data to the main chart
-			
-			note: no key function is used here; 
-			- therefore the data binding is by index, which effectivly means that available DOM elements
-			are associated with each item in the available data array, from 
-			first to last index; if the new data array contains fewer elements
-			than the existing DOM elements, the LAST DOM elements are removed;
-			
-			- basically, for each step, the data items "walks" leftward (each data 
-			item occupying the next DOM element to the left);
-			
-			- This data binding is very different from one that is done with a key 
-			function; in such a case, a data item stays "resident" in the DOM
-			element, and such DOM element (with data) would be moved left, until
-			the x position is to the left of the chart, where the item would be 
-			exited
-			*/	
+			let blockSlotOffset = 4;
 
 			let updateBlocksSel = blocksG.selectAll(".bar")
 				.data(data.filter(d => d.category === "Blocks"));
-			
+
+			// remove items
+			updateBlocksSel.exit().remove();
+
 			// add items
 			updateBlocksSel.enter()
 				.append(function (d) {
 					if (debug) { console.log("d", JSON.stringify(d)); }
-					if (d.type == undefined) console.error(JSON.stringify(d))
-					let type = d.type || "circle";
+					let type = "g";
 					let node = document.createElementNS("http://www.w3.org/2000/svg", type);
 					return node;
 				})
 				.attr("class", "bar")
 				.attr("id", function () {
 					return "bar-" + barId++;
-				});
+				})
+				.html(function (d) {
+					// console.log("d", d);
+					return `
 
-			// remove items
-			updateBlocksSel.exit().remove();	
+						// SLOT
+						<rect class="slot"
+							x="${-(d.size / 2) + 1 - blockSlotOffset}"
+							y="${-(y(d.category) / 2) - blockSlotOffset}" 
+							width="${d.size + (blockSlotOffset * 2)}"
+							height="${y(d.category) + (blockSlotOffset * 2)}"
+							fill="white"
+							stroke="#555"
+							stroke-opacity="1"
+						></rect>
+						
+						// BLOCK
+						<rect class="block"
+							x="${-(d.size / 2) + 1}"
+							y="${-(y(d.category) / 2)}" 
+							width="${d.size}"
+							height="${y(d.category)}"
+							fill="${mapBlockStatusToColor(d)}"
+							stroke="none"
+						></rect>
+						`
+				});
 
 			// update items; added items are now part of the update selection
 			updateBlocksSel
-				.attr("x", function (d) {
-					let retVal = null;
-					let size = d.size || 6;
-					switch (d.category) {
-						case "Blocks":
-							retVal = Math.round(x(d.time) - size / 2);
-							break;
-						default:
-					}
-					return retVal;
-				})
-				.attr("y", function (d) {
-					let retVal = null;
-					let size = d.size || 6;
-					switch (d.category) {
-						case "Blocks":
-							retVal = y(d.category) - (y(d.category) / 2);
-							break;
-						default:
-					}
-					return retVal;
-				})
-				.attr("cx", function (d) {
-					let retVal = null;
-					switch (d.category) {
-						case "Blocks":
-							retVal = Math.round(x(d.time));
-							break;
-						default:	
-					}
-					return retVal;
-				})
-				.attr("cy", function (d) {
-					let retVal = null;
-					switch (d.category) {
-						case "Blocks":
-							retVal = y(d.category);
-							break;
-						default:
-					}
-					return retVal;
-				})
-				.attr("r", function (d) {
-					let retVal = null;
-					switch (d.category) {
-						case "Blocks":
-							retVal = d.size / 2;
-							break;	
-						default:
-					}
-					return retVal;
-				})
-				.attr("width", function (d) {
-					let retVal = null;
-					switch (d.category) {
-						case "Blocks":
-							retVal = d.size;
-							break;
-						default:
-					}
-					return retVal;
-				})
-				.attr("height", function (d) {
-					let retVal = null;
-					switch (d.category) {
-						case "Blocks":
-							// retVal = d.size;
-							retVal = y(d.category);
-							break;
-						default:
-					}
-					return retVal;
-				})
-				.style("fill", d => {
-					let retVal = "none";
-					switch (d.category) {
-						case "Blocks":
-							if (d.status === "proposed") {
-								retVal = "green"
-							} else if (d.status === "orphaned") {
-								retVal = "orange"
-							} else {
-								retVal = "white"
-							};
-							break;
-						default:
-					}
-					return retVal;
-				})
-				.style("stroke", d => d.color || "black")
-				.style("stroke-opacity", d => d.opacity || 1)
-				.style("stroke-dasharray", d => {
-					let retVal = "none";
-					switch(d.category) {
-						case "Blocks":
-							retVal = "1,2"
-							break;
-						default:		
-					}
-					return retVal;
+				.attr("transform", function (d) {
+					let retValX = Math.round(x(d.time));
+					let retValY = y(d.category);
+					return `translate(${retValX},${retValY})`;
 				});
 
+			function mapBlockStatusToColor(d) {
+				let retVal = "none";
+				switch (d.category) {
+					case "Blocks":
+						if (d.status === "proposed") {
+							retVal = "#28a745"
+						} else if (d.status === "orphaned") {
+							retVal = "#aaa"
+						} else {
+							retVal = "white"
+						};
+						break;
+					default:
+				}
+				return retVal;
+			}
 
-				
+
+			/* 	====================================================================================
+				BLOCK ROOTS
+				==================================================================================== */
+
+			let updateRootsSel = rootsG.selectAll(".bar")
+				.data(data.filter(d => d.category === "Blocks"));
+
+			// remove items
+			updateRootsSel.exit().remove();
+
+			// add items
+			updateRootsSel.enter()
+				.append("path")
+				.attr("class", "bar")
+				.attr("id", function () {
+					return "bar-" + barId++;
+				});
+
+			// ${(getPreviousRootPosition(updateRootsSel, i) / 2)}
+			// 20,
+
+			// update items; added items are now part of the update selection
+			updateRootsSel
+				.attr("d", (d, i) => {
+					// const x0 = Math.round(x(d.time)),
+					// 	  y0 = y(d.category) * 1.5 + blockSlotOffset,
+					// 	  cpx = getPreviousRootPosition(updateRootsSel, i) + ((Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i))* .5),
+					// 	  cpy = y0 + 20,
+					// 	  x1 = getPreviousRootPosition(updateRootsSel, i),
+					// 	  y1 = y0;
+
+					// const path = d3.svg.path();
+					// path.moveTo(x0, y0);
+					// path.quadraticCurveTo(cpx, cpy, x1, y1);
+					// return path;
+					return `
+						M 	${Math.round(x(d.time))} 
+							${(y(d.category) * 1.5) + blockSlotOffset} 
+						C 	${getPreviousRootPosition(updateRootsSel, i) + ( (Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i))* .5)} 
+							${(y(d.category) * 1.75) + blockSlotOffset}
+							${getPreviousRootPosition(updateRootsSel, i) + ( (Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i))* .5)} 
+							${(y(d.category) * 1.75) + blockSlotOffset}
+							${getPreviousRootPosition(updateRootsSel, i)} 
+							${(y(d.category) * 1.5) + blockSlotOffset} 	
+						`;
+				}
+				)
+				.attr("stroke", "#555")
+				.attr("fill", "transparent");
+
+			function getPreviousRootPosition(selection, i) {
+				if (selection.data()[i-1]) {
+					return Math.round(x(selection.data()[i-1].time));
+				}
+				return 0;
+			}	
+
 			/* 	====================================================================================
 				nav update
 				==================================================================================== */
@@ -510,16 +505,10 @@ function realTimeChartMulti() {
 		} // end refreshChart function
 
 
-		function getTagName(that) {
-			let tagName = d3.select(that).node().tagName;
-			return (tagName);
-		}
-
-
 		/* 	====================================================================================
 			function to keep the chart "moving" through time (right to left) 
 			==================================================================================== */
-		
+
 		setInterval(function () {
 
 			if (halted) return;

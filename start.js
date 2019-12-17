@@ -73,7 +73,6 @@ async function initialize() {
 
 			// drive data into the chart at average interval of five seconds
 			// here, set the timeout to roughly five seconds
-			// timeout = Math.round(timeScale(normal()));
 			timeout = 12000;
 
 
@@ -138,10 +137,8 @@ async function initialize() {
 
 			block = {
 				time: now,
-				color: "black",
-				opacity: (status === "proposed") ? 1 : .5,
 				category: "Blocks",
-				type: "rect",
+				type: "g",
 				size: (status === "proposed") ? 24 : 24,
 				status: status
 			};
@@ -158,6 +155,10 @@ async function initialize() {
 
 			// do forever
 			dataGenerator();
+
+			/* 	====================================================================================
+				TODO: JUSTIFICATION & FINALITY UPDATES
+				==================================================================================== */
 
 		}, timeout);
 	}
