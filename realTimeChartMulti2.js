@@ -254,7 +254,6 @@ function realTimeChartMulti() {
 		// initial invocation; update display
 		data = [];
 		refresh();
-
 		
 		/* 	====================================================================================
 			function to refresh the viz upon changes of the time domain 
@@ -458,6 +457,8 @@ function realTimeChartMulti() {
 						case "Blocks":
 							if (d.status === "proposed") {
 								retVal = "green"
+							} else if (d.status === "orphaned") {
+								retVal = "orange"
 							} else {
 								retVal = "white"
 							};
@@ -478,6 +479,12 @@ function realTimeChartMulti() {
 					}
 					return retVal;
 				});
+
+
+				
+			/* 	====================================================================================
+				nav update
+				==================================================================================== */
 
 			// create update selection for the nav chart, by applying data
 			let updateBlocksSelNav = navG.selectAll("circle")
