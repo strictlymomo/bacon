@@ -421,7 +421,7 @@ function realTimeChartMulti() {
 
 
 			/* 	====================================================================================
-				BLOCK ROOTS
+				ROOTS
 				==================================================================================== */
 
 			let updateRootsSel = rootsG.selectAll(".bar")
@@ -437,9 +437,6 @@ function realTimeChartMulti() {
 				.attr("id", function () {
 					return "bar-" + barId++;
 				});
-
-			// ${(getPreviousRootPosition(updateRootsSel, i) / 2)}
-			// 20,
 
 			// update items; added items are now part of the update selection
 			updateRootsSel
@@ -470,12 +467,26 @@ function realTimeChartMulti() {
 				.attr("stroke", "#555")
 				.attr("fill", "transparent");
 
+			// TODO: calling this function kills memory. store the root hashes or rely on the API
 			function getPreviousRootPosition(selection, i) {
-				if (selection.data()[i-1]) {
-					return Math.round(x(selection.data()[i-1].time));
+				let prevBlock = selection.data()[i - 1];
+				let prevBlockIndex = i - 1;
+				let parentIndex = 0;
+				
+				// there is a block
+				if (prevBlock) {
+					// ... and it is the parent block
+					if (prevBlock.status === "proposed") {
+						parentIndex = Math.round(x(prevBlock.time));
+						return parentIndex;
+					} 
+					// ... and it is a missing or orphaned block. let's recursively find parent...
+					parentIndex = getPreviousRootPosition(selection, prevBlockIndex);
+					return parentIndex;
 				}
-				return 0;
-			}	
+				// no block
+				return parentIndex;
+			}
 
 			/* 	====================================================================================
 				nav update
@@ -538,7 +549,7 @@ function realTimeChartMulti() {
 			// refresh svg
 			refresh();
 
-		}, 10)
+		}, 12000)
 
 		// end setInterval function
 
