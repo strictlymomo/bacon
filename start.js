@@ -2,11 +2,20 @@
 
 async function initialize() {
 
-	// create the real time chart
+	/* 	-----------------------------------
+		Dummy Prysm Data
+		----------------------------------- */
+
+		let sampleBlock = await getSampleBlock(217540);
+
+	/* 	-----------------------------------
+		create the real time chart
+		----------------------------------- */
+		
 	let chart = realTimeChartMulti()
 		.title("Beacon Chain")
-		.yTitle("Categories")
 		.xTitle("Time")
+		.yTitle("Categories")
 		.yDomain([
 			"Epochs",
 			"Blocks",
@@ -34,7 +43,9 @@ async function initialize() {
 		chart.halt(state);
 	})
 
-	// configure the data generator
+	/* 	-----------------------------------
+		Configure the data generator
+		----------------------------------- */
 
 	// mean and deviation for generation of time intervals
 	let tX = 12; // time constant, multiple of one second
@@ -50,16 +61,12 @@ async function initialize() {
 	// define function that returns normally distributed random numbers
 	let normal = d3.random.normal(meanMs, dev);
 
-	// beaconchain data
-	let nodes = [];
-	let edges = [];
-
-	let sampleBlock;
-	await getSampleBlock();
-
 	// in a normal use case, real time data would arrive through the network or some other mechanism
 	let d = -1;
 	let timeout = 0;
+
+	// start the data generator
+	dataGenerator();
 
 	// define data generator
 	function dataGenerator() {
@@ -71,16 +78,16 @@ async function initialize() {
 			// create timestamp for this category data item
 			let now = new Date(new Date().getTime());
 
-			// drive data into the chart at average interval of five seconds
-			// here, set the timeout to roughly five seconds
+			// drive data into the chart at designated slot interval
 			timeout = 12000;
 
 
-			/* 	====================================================================================
+			/* 	------------------------------------------------------------------------------------
 				EPOCHS
-				==================================================================================== */
+				------------------------------------------------------------------------------------ */
 
 			// HACK: epoch countdown
+			// TODO: JUSTIFICATION & FINALITY UPDATES
 			/* TODO: get slots in epoch correctly. 
 				populate two epochs' worth of slots and prepend to the current head slot 
 				get the head slot
@@ -88,6 +95,7 @@ async function initialize() {
 				get the last justified
 				get the last finalized
 			*/
+
 			if (d % 8 === 0) {
 				
 				let epoch = {
@@ -106,9 +114,9 @@ async function initialize() {
 			}
 
 
-			/* 	====================================================================================
+			/* 	------------------------------------------------------------------------------------
 				BLOCKS
-				==================================================================================== */
+				------------------------------------------------------------------------------------ */
 
 			/*
 				Block at Slot 226282
@@ -147,30 +155,24 @@ async function initialize() {
 			chart.datum(block);
 
 			
-			/* 	====================================================================================
+			/* 	------------------------------------------------------------------------------------
 				ATTESTATIONS
-				==================================================================================== */
+				------------------------------------------------------------------------------------ */
 
 			// TODO: circle packing
 
 			// do forever
 			dataGenerator();
 
-			/* 	====================================================================================
-				TODO: JUSTIFICATION & FINALITY UPDATES
-				==================================================================================== */
-
 		}, timeout);
 	}
 
-	// start the data generator
-	dataGenerator();
-
-	async function getSampleBlock() {
-		sampleBlock = await fetch(`block.json`)
+	async function getSampleBlock(slot) {
+		return await fetch(`data/block_${slot}.json`)
 			.then(response => response.json())
 			.then(data => (data.blockContainers.length === 1) ? data.blockContainers[0] : null);
 	}
-}
+	
+} // end initialize function
 
 initialize();
