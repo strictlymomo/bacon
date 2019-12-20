@@ -142,7 +142,7 @@ function realTimeChartMulti() {
 
 		// define main chart scales
 		x = d3.scaleTime().range([0, width]);
-		y = d3.scalePoint().domain(yDomain).range([height, 0]).padding(1)
+		y = d3.scalePoint().domain(yDomain).rangeRound([height, 0]).padding(.5)
 
 		// define main chart axis
 		xAxis = d3.axisBottom(x);
@@ -178,7 +178,7 @@ function realTimeChartMulti() {
 
 		// define nav chart scales
 		xNav = d3.scaleTime().range([0, widthNav]);
-		yNav = d3.scalePoint().domain(yDomain).range([heightNav, 0]).padding(1)
+		yNav = d3.scalePoint().domain(yDomain).rangeRound([heightNav, 0]).padding(.5)
 
 		// define nav axis
 		let xAxisNav = d3.axisBottom();
@@ -645,11 +645,11 @@ function realTimeChartMulti() {
 		yDomain = _;
 		if (svg) {
 			// update the y ordinal scale
-			y = d3.scalePoint().domain(yDomain).range([height, 0]).padding(1);
+			y = d3.scalePoint().domain(yDomain).rangeRound([height, 0]).padding(.5);
 			// update the y axis
 			yAxis.scale(y)(yAxisG);
 			// update the y ordinal scale for the nav chart
-			yNav = d3.scalePoint().domain(yDomain).range([heightNav, 0]).padding(1);
+			yNav = d3.scalePoint().domain(yDomain).rangeRound([heightNav, 0]).padding(.5);
 		}
 		return chart;
 	}
