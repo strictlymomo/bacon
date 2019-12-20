@@ -207,6 +207,22 @@ function realTimeChartMulti() {
 			.attr("clip-path", "url(#myClip")
 			.append("g");
 	
+		// define root hash arrow
+		svg.append("svg:defs").append("svg:marker")
+			.attr("id", "triangle")
+			.attr("refX", 3)
+			.attr("refY", 3)
+			.attr("markerWidth", 15)
+			.attr("markerHeight", 15)
+			.attr("markerUnits","userSpaceOnUse")
+			.attr("orient", "auto")
+			.append("path")
+			.attr("d", "M 0 0 6 3 0 6 1.5 3")
+			.style("fill", "black");
+
+		/* 	----------------------------------------
+			scales
+			---------------------------------------- */
 
 		// compute initial time domains...
 		let ts = new Date().getTime();
@@ -235,6 +251,9 @@ function realTimeChartMulti() {
 		yAxis.scale(y)(yAxisG);
 		xAxisNav.scale(xNav)(xAxisGNav);
 
+		/* 	----------------------------------------
+			focus + context
+			---------------------------------------- */
 		// create brush (moveable, changable rectangle that determines the time domain of main chart)
 		let viewport = d3.brushX()
 			.extent([[0, 0], [widthNav, heightNav]])
@@ -463,31 +482,20 @@ function realTimeChartMulti() {
 			// update items; added items are now part of the update selection
 			updateRootsSel
 				.attr("d", (d, i) => {
-					// const x0 = Math.round(x(d.time)),
-					// 	  y0 = y(d.category) * 1.5 + blockSlotOffset,
-					// 	  cpx = getPreviousRootPosition(updateRootsSel, i) + ((Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i))* .5),
-					// 	  cpy = y0 + 20,
-					// 	  x1 = getPreviousRootPosition(updateRootsSel, i),
-					// 	  y1 = y0;
-
-					// const path = d3.svg.path();
-					// path.moveTo(x0, y0);
-					// path.quadraticCurveTo(cpx, cpy, x1, y1);
-					// return path;
-					return `
-						M 	${Math.round(x(d.time))} 
-							${(y(d.category) * 1.5) + blockSlotOffset} 
-						C 	${getPreviousRootPosition(updateRootsSel, i) + ((Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i)) * .5)} 
-							${(y(d.category) * 1.75) + blockSlotOffset}
-							${getPreviousRootPosition(updateRootsSel, i) + ((Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i)) * .5)} 
-							${(y(d.category) * 1.75) + blockSlotOffset}
-							${getPreviousRootPosition(updateRootsSel, i)} 
-							${(y(d.category) * 1.5) + blockSlotOffset} 	
-						`;
-				}
-				)
+					const x0 = Math.round(x(d.time)) - (d.size / 4),
+						  y0 = y(d.category) * 1.5 + blockSlotOffset,
+						  cpx = getPreviousRootPosition(updateRootsSel, i) + ((Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i))* .5),
+						  cpy = y(d.category) * 1.75 + blockSlotOffset,
+						  x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size / 4),
+						  y1 = y0,
+						  path = d3.path();						  
+					path.moveTo(x0, y0);
+					path.quadraticCurveTo(cpx, cpy, x1, y1);
+					return path;
+				})
 				.attr("stroke", "#555")
-				.attr("fill", "transparent");
+				.attr("fill", "transparent")
+				.attr("marker-end", "url(#triangle)");
 
 			// TODO: calling this function kills memory. store the root hashes or rely on the API
 			function getPreviousRootPosition(selection, i) {
@@ -561,8 +569,6 @@ function realTimeChartMulti() {
 			viewport.extent(extent);
 			
 			// update scales
-			// console.log(d3.brushSelection(viewport));
-			// x.domain(d3.brushSelection(viewport) ? xNav.domain([startTime, endTime]) : extent);
 			x.domain(extent);
 			xNav.domain([startTime, endTime]);
 
@@ -573,7 +579,7 @@ function realTimeChartMulti() {
 			// refresh svg
 			refresh();
 
-		}, 1200)
+		}, 200)
 
 		return chart;
 
