@@ -11,6 +11,7 @@
 .axis .title {
     font-weight: bold;
     text-anchor: middle;
+    fill: black;
 }
 
 .axis path, .axis line {
@@ -42,8 +43,14 @@
     fill-opacity: 0.3;
 }
 
-.viewport .extent {
+.viewport .extent,
+.viewport .selection {
     fill: green;
+}
+
+.viewport .overlay {
+    fill: rgba(255,0,0,.1);
+    stroke: none;
 }
 
 .layout {
