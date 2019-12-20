@@ -138,8 +138,6 @@ function realTimeChartMulti() {
 				return text;
 			});
 		
-			console.log("yDomain", yDomain);
-
 		// define main chart scales
 		x = d3.scaleTime().range([0, width]);
 		y = d3.scalePoint().domain(yDomain).rangeRound([height, 0]).padding(.5)
@@ -223,13 +221,8 @@ function realTimeChartMulti() {
 		let startTimeViewport = new Date(endTime.getTime() - width / pixelsPerSecond * 1000);
 		let intervalViewport = endTimeViewport.getTime() - startTimeViewport.getTime();
 		let offsetViewport = startTimeViewport.getTime() - startTime.getTime();
-		console.log("startTimeViewport		", startTimeViewport);
-		console.log("endTimeViewport			", endTimeViewport);
-		console.log("intervalViewport		", intervalViewport);
-		console.log("offsetViewport			", offsetViewport);
 
 		// initialize extent
-		// let extent = [xNav.invert(0),xNav.invert(widthNav)];
 		let extent = [startTimeViewport, endTimeViewport];
 
 		// set the scale domains for main and nav charts
@@ -245,13 +238,11 @@ function realTimeChartMulti() {
 		// create brush (moveable, changable rectangle that determines the time domain of main chart)
 		let viewport = d3.brushX()
 			.extent([[0, 0], [widthNav, heightNav]])
-			.on("start end", brushed);
+			.on("brush", brushed);
 
 		function brushed() {
 
 			const selection = d3.event.selection || xNav.range();
-
-			console.log(d3.brushSelection(this));
 
 			// get the current time extent of viewport
 			startTimeViewport = xNav.invert(selection[0]);
@@ -269,8 +260,7 @@ function realTimeChartMulti() {
 			}
 			
 			// update the x domain of the main chart
-			// x.domain(extent);
-			x.domain(d3.brushSelection(this) ? xNav.domain() : extent);
+			x.domain(extent);
 			xNav.domain([startTime, endTime]);
 
 			// update the x axis of the main chart
@@ -344,6 +334,11 @@ function realTimeChartMulti() {
 				.attr("id", function () {
 					return "bar-" + barId++;
 				})
+				.attr("transform", function (d) {
+					let retValX = Math.round(x(d.time));
+					let retValY = y(d.category);
+					return `translate(${retValX},${retValY})`;
+				})
 				.html(function (d) {
 					// console.log("d", d);
 					return `
@@ -392,11 +387,13 @@ function realTimeChartMulti() {
 				.attr("id", function () {
 					return "bar-" + barId++;
 				})
+				.attr("transform", function (d) {
+					let retValX = Math.round(x(d.time));
+					let retValY = y(d.category);
+					return `translate(${retValX},${retValY})`;
+				})
 				.html(function (d) {
-					// console.log("d", d);
 					return `
-
-						// SLOT
 						<rect 
 							class="slot"
 							x="${-(d.size / 2) + 1 - blockSlotOffset}"
@@ -407,8 +404,6 @@ function realTimeChartMulti() {
 							stroke="#555"
 							stroke-opacity="1"
 						></rect>
-						
-						// BLOCK
 						<rect 
 							class="block"
 							x="${-(d.size / 2) + 1}"
@@ -566,8 +561,9 @@ function realTimeChartMulti() {
 			viewport.extent(extent);
 			
 			// update scales
-			console.log(d3.brushSelection(viewport));
-			x.domain(d3.brushSelection(viewport) ? xNav.domain([startTime, endTime]) : extent);
+			// console.log(d3.brushSelection(viewport));
+			// x.domain(d3.brushSelection(viewport) ? xNav.domain([startTime, endTime]) : extent);
+			x.domain(extent);
 			xNav.domain([startTime, endTime]);
 
 			// update axis
@@ -577,7 +573,7 @@ function realTimeChartMulti() {
 			// refresh svg
 			refresh();
 
-		}, 200)
+		}, 1200)
 
 		return chart;
 
