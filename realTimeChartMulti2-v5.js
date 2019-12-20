@@ -209,7 +209,7 @@ function realTimeChartMulti() {
 	
 		// define root hash arrow
 		svg.append("svg:defs").append("svg:marker")
-			.attr("id", "triangle")
+			.attr("id", "proposed-triangle")
 			.attr("refX", 3)
 			.attr("refY", 3)
 			.attr("markerWidth", 15)
@@ -218,7 +218,19 @@ function realTimeChartMulti() {
 			.attr("orient", "auto")
 			.append("path")
 			.attr("d", "M 0 0 6 3 0 6 1.5 3")
-			.style("fill", "black");
+			.style("fill", "#555");
+		
+		svg.append("svg:defs").append("svg:marker")
+			.attr("id", "orphaned-triangle")
+			.attr("refX", 3)
+			.attr("refY", 3)
+			.attr("markerWidth", 15)
+			.attr("markerHeight", 15)
+			.attr("markerUnits","userSpaceOnUse")
+			.attr("orient", "auto")
+			.append("path")
+			.attr("d", "M 0 0 6 3 0 6 1.5 3")
+			.style("fill", "#ccc");	
 
 		/* 	----------------------------------------
 			scales
@@ -242,7 +254,6 @@ function realTimeChartMulti() {
 		let extent = [startTimeViewport, endTimeViewport];
 
 		// set the scale domains for main and nav charts
-		// x.domain([startTimeViewport, endTimeViewport]);
 		x.domain(extent);
 		xNav.domain([startTime, endTime]);
 
@@ -484,18 +495,36 @@ function realTimeChartMulti() {
 				.attr("d", (d, i) => {
 					const x0 = Math.round(x(d.time)) - (d.size / 4),
 						  y0 = y(d.category) * 1.5 + blockSlotOffset,
-						  cpx = getPreviousRootPosition(updateRootsSel, i) + ((Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i))* .5),
+						  cpx = getPreviousRootPosition(updateRootsSel, i) + ((Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i)) * .5),
 						  cpy = y(d.category) * 1.75 + blockSlotOffset,
-						  x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size / 4),
+						  x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size / 4), //TODO: handle no block
 						  y1 = y0,
 						  path = d3.path();						  
 					path.moveTo(x0, y0);
 					path.quadraticCurveTo(cpx, cpy, x1, y1);
 					return path;
 				})
-				.attr("stroke", "#555")
+				.attr("stroke", d => {
+					switch(d.status){
+						case "proposed":
+							return "#555";
+						case "orphaned":
+							return "#ccc"
+						default:
+							return "none"		
+					}
+				})
 				.attr("fill", "transparent")
-				.attr("marker-end", "url(#triangle)");
+				.attr("marker-end", d => {
+					switch(d.status){
+						case "proposed":
+							return "url(#proposed-triangle)";
+						case "orphaned":
+							return "url(#orphaned-triangle)"
+						default:
+							return ""
+					}
+				});
 
 			// TODO: calling this function kills memory. store the root hashes or rely on the API
 			function getPreviousRootPosition(selection, i) {
