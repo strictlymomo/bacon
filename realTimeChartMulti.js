@@ -22,7 +22,8 @@ function realTimeChartMulti() {
 		xAxisG, yAxisG,
 		xAxis, yAxis,
 		svg,
-		backgroundColor;
+		backgroundColor,
+		offset;
 
 	/* 	------------------------------------------------------------------------------------
 		create the chart
@@ -56,6 +57,8 @@ function realTimeChartMulti() {
 		let marginTopNav = svgHeight - margin.bottom - heightNav - margin.topNav;
 		width = svgWidth - margin.left - margin.right;
 		widthNav = width;
+
+		offset = 4;
 
 		// append the svg
 		svg = selection.append("svg")
@@ -373,16 +376,14 @@ function realTimeChartMulti() {
 					// console.log("d", d);
 					return `
 						<line 
-							x1="1" 
-							x2="1" 
+							x1="0" 
+							x2="0" 
 							y1="${-(y(d.category) * 2)}"
-							y2="${0}"
-							stroke="${(d.color || "black")}"
-							stroke-opacity="${(d.opacity || 1)}"
-							stroke-dasharray="3,6"
+							y2="${y(d.category)}"
+							stroke="black"
+							stroke-opacity=".17"
 						></line>
-						<text x="6" y="-${"1em"}" font-size=".71em" fill="black">Epoch</text>
-						<text x="6" y="0" font-size=".71em" fill="black">${d.label}</text>
+						<text x="${offset}" y="${-(y(d.category)) + 8}" font-size=".71em" fill="black">Epoch ${d.label}</text>
 						`
 				});
 
@@ -396,8 +397,6 @@ function realTimeChartMulti() {
 			/* 	------------------------------------------------------------------------------------
 				BLOCKS
 				------------------------------------------------------------------------------------ */
-
-			let blockSlotOffset = 4;
 
 			let updateBlocksSel = blocksG.selectAll(".bar")
 				.data(data.filter(d => d.category === "Blocks"));
@@ -422,37 +421,52 @@ function realTimeChartMulti() {
 					let retValY = y(d.category);
 					return `translate(${retValX},${retValY})`;
 				})
-				.html(function (d) {
-					return `
-						<rect 
-							class="slot"
-							x="${-(d.size / 2) + 1 - blockSlotOffset}"
-							y="${-(y(d.category) / 2) - blockSlotOffset}" 
-							width="${d.size + (blockSlotOffset * 2)}"
-							height="${y(d.category) + (blockSlotOffset * 2)}"
-							fill="white"
-							stroke="#555"
-							stroke-opacity="1"
-						></rect>
-						<rect 
-							class="block"
-							x="${-(d.size / 2) + 1}"
-							y="${-(y(d.category) / 2)}" 
-							width="${d.size}"
-							height="${y(d.category)}"
-							fill="${mapBlockStatusToColor(d)}"
-							stroke="none"
-						></rect>
-						`
-				});
-
+				.html(d => blockTemplate(d));
+			
 			// update items; added items are now part of the update selection
 			updateBlocksSel
 				.attr("transform", function (d) {
 					let retValX = Math.round(x(d.time));
 					let retValY = y(d.category);
 					return `translate(${retValX},${retValY})`;
-				});
+				})
+				.html(d => blockTemplate(d));
+
+			function blockTemplate(d) {
+				return `
+					<line
+						class="slot_line" 
+						x1="0" 
+						x2="0" 
+						y1="${-(y(d.category))}"
+						y2="${y(d.category) * 3}"
+						stroke="${(d.color || "black")}"
+						stroke-opacity=".07"
+					></line>
+					<rect 
+						class="block"
+						x="${offset}"
+						y="${-(y(d.category) / 2)}" 
+						width="${getSlotWidth(d) - (offset * 2)}"
+						height="${y(d.category)}"
+						fill="${mapBlockStatusToColor(d)}"
+						stroke="none"
+					></rect>
+					<text 
+						x="${offset}"
+						y="${-(y(d.category) / 2) - 6}"
+						font-size=".71em" 
+						fill="black"
+						opacity=".17"
+						>${d.slot}</text>
+					`;
+			}
+
+			function getSlotWidth(d) {
+				let t1 = x(d.time);
+				let t2 = x(new Date(d.time.getTime() + 12000));
+				return t2- t1;
+			}	
 
 			function mapBlockStatusToColor(d) {
 				let retVal = "none";
@@ -493,13 +507,13 @@ function realTimeChartMulti() {
 			// update items; added items are now part of the update selection
 			updateRootsSel
 				.attr("d", (d, i) => {
-					const x0 = Math.round(x(d.time)) - (d.size / 4),
-						  y0 = y(d.category) * 1.5 + blockSlotOffset,
-						  cpx = getPreviousRootPosition(updateRootsSel, i) + ((Math.round(x(d.time)) - getPreviousRootPosition(updateRootsSel, i)) * .5),
-						  cpy = y(d.category) * 1.75 + blockSlotOffset,
-						  x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size / 4), //TODO: handle no block
+					const x0 = Math.round(x(d.time)) + (d.size / 4) + offset,
+						  y0 = y(d.category) * 1.5 + offset + 1,
+						  x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size * 3/4) + offset,
 						  y1 = y0,
-						  path = d3.path();						  
+						  cpx = x1 + ((x0 - x1) * .5),
+						  cpy = y(d.category) * 1.75 + offset,
+						  path = d3.path();	  
 					path.moveTo(x0, y0);
 					path.quadraticCurveTo(cpx, cpy, x1, y1);
 					return path;

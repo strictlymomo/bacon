@@ -100,12 +100,10 @@ async function initialize() {
 				
 				let epoch = {
 					time: now,
-					color: "black",
-					opacity: Math.max(Math.random(), 0.3),
 					category: "Epochs",
 					type: "g",
 					size: Math.max(Math.round(Math.random() * 12), 4),
-					label: (d / 8).toString()
+					label: Math.round(d / 8).toString()
 				};
 
 				// send the datum to the chart
@@ -147,8 +145,9 @@ async function initialize() {
 				time: now,
 				category: "Blocks",
 				type: "g",
-				size: (status === "proposed") ? 24 : 24,
-				status: status
+				size: 24,
+				status: status,
+				slot: d.toString()
 			};
 
 			// send the datum to the chart
