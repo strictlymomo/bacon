@@ -103,7 +103,7 @@ async function initialize() {
 					category: "Epochs",
 					type: "g",
 					size: Math.max(Math.round(Math.random() * 12), 4),
-					label: Math.round(d / 8).toString()
+					label: Math.round(d / 8).toString(),
 				};
 
 				// send the datum to the chart
@@ -132,6 +132,7 @@ async function initialize() {
 			// random block status
 			let seed = Math.random();
 			let status;
+			let attestations = 0;
 
 			if (seed < .1) {
 				status = "orphaned";
@@ -139,6 +140,7 @@ async function initialize() {
 				status = "missing";
 			} else {
 				status = "proposed";
+				attestations = Math.round(Math.random(0,100));
 			}
 
 			block = {
@@ -147,7 +149,8 @@ async function initialize() {
 				type: "g",
 				size: 24,
 				status: status,
-				slot: d.toString()
+				slot: d.toString(),
+				votes: attestations
 			};
 
 			// send the datum to the chart

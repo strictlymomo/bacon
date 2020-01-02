@@ -140,7 +140,7 @@ function realTimeChartMulti() {
 				let text = chartTitle == undefined ? "" : chartTitle;
 				return text;
 			});
-		
+
 		// define main chart scales
 		x = d3.scaleTime().range([0, width]);
 		y = d3.scalePoint().domain(yDomain).rangeRound([height, 0]).padding(.5)
@@ -209,7 +209,7 @@ function realTimeChartMulti() {
 			.attr("transform", "translate(0, 0)")
 			.attr("clip-path", "url(#myClip")
 			.append("g");
-	
+
 		// define root hash arrow
 		svg.append("svg:defs").append("svg:marker")
 			.attr("id", "proposed-triangle")
@@ -217,23 +217,23 @@ function realTimeChartMulti() {
 			.attr("refY", 3)
 			.attr("markerWidth", 15)
 			.attr("markerHeight", 15)
-			.attr("markerUnits","userSpaceOnUse")
+			.attr("markerUnits", "userSpaceOnUse")
 			.attr("orient", "auto")
 			.append("path")
 			.attr("d", "M 0 0 6 3 0 6 1.5 3")
 			.style("fill", "#555");
-		
+
 		svg.append("svg:defs").append("svg:marker")
 			.attr("id", "orphaned-triangle")
 			.attr("refX", 3)
 			.attr("refY", 3)
 			.attr("markerWidth", 15)
 			.attr("markerHeight", 15)
-			.attr("markerUnits","userSpaceOnUse")
+			.attr("markerUnits", "userSpaceOnUse")
 			.attr("orient", "auto")
 			.append("path")
 			.attr("d", "M 0 0 6 3 0 6 1.5 3")
-			.style("fill", "#ccc");	
+			.style("fill", "#ccc");
 
 		/* 	----------------------------------------
 			scales
@@ -291,7 +291,7 @@ function realTimeChartMulti() {
 				intervalViewport = maxSeconds * 1000;
 				offsetViewport = 0;
 			}
-			
+
 			// update the x domain of the main chart
 			x.domain(extent);
 			xNav.domain([startTime, endTime]);
@@ -375,17 +375,37 @@ function realTimeChartMulti() {
 				.html(function (d) {
 					// console.log("d", d);
 					return `
-						<line 
+						<line
 							x1="0" 
 							x2="0" 
 							y1="${-(y(d.category) * 2)}"
 							y2="${y(d.category)}"
 							stroke="black"
 							stroke-opacity=".17"
-						></line>
-						<text x="${offset}" y="${-(y(d.category)) + 8}" font-size=".71em" fill="black">Epoch ${d.label}</text>
+						>
+						${justificationAnimationTemplate()}	
+						</line>
+						<text 
+							x="${offset}" 
+							y="${-(y(d.category)) + 8}" 
+							font-size=".71em" 
+							fill="black"
+						>Epoch ${d.label}
+						${justificationAnimationTemplate()}
+						</text>
 						`
 				});
+
+			function justificationAnimationTemplate() {
+				return `<animate id="animation1"
+					attributeName="opacity"
+					from="0" to="1" dur="3s"
+					begin="0s;animation2.end" />
+					<animate id="animation2"
+					attributeName="opacity"
+					from="1" to="0" dur="3s" 
+					begin="animation1.end" />`;
+			}	
 
 			updateEpochsSel
 				.attr("transform", function (d) {
@@ -422,7 +442,7 @@ function realTimeChartMulti() {
 					return `translate(${retValX},${retValY})`;
 				})
 				.html(d => blockTemplate(d));
-			
+
 			// update items; added items are now part of the update selection
 			updateBlocksSel
 				.attr("transform", function (d) {
@@ -435,14 +455,15 @@ function realTimeChartMulti() {
 			function blockTemplate(d) {
 				return `
 					<line
-						class="slot_line" 
+						class="slot_line not-justified" 
 						x1="0" 
 						x2="0" 
 						y1="${-(y(d.category))}"
 						y2="${y(d.category) * 3}"
 						stroke="${(d.color || "black")}"
 						stroke-opacity=".07"
-					></line>
+					>
+					</line>
 					<rect 
 						class="block"
 						x="${offset}"
@@ -465,8 +486,8 @@ function realTimeChartMulti() {
 			function getSlotWidth(d) {
 				let t1 = x(d.time);
 				let t2 = x(new Date(d.time.getTime() + 12000));
-				return t2- t1;
-			}	
+				return t2 - t1;
+			}
 
 			function mapBlockStatusToColor(d) {
 				let retVal = "none";
@@ -508,29 +529,29 @@ function realTimeChartMulti() {
 			updateRootsSel
 				.attr("d", (d, i) => {
 					const x0 = Math.round(x(d.time)) + (d.size / 4) + offset,
-						  y0 = y(d.category) * 1.5 + offset + 1,
-						  x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size * 3/4) + offset,
-						  y1 = y0,
-						  cpx = x1 + ((x0 - x1) * .5),
-						  cpy = y(d.category) * 1.75 + offset,
-						  path = d3.path();	  
+						y0 = y(d.category) * 1.5 + offset + 1,
+						x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size * 3 / 4) + offset,
+						y1 = y0,
+						cpx = x1 + ((x0 - x1) * .5),
+						cpy = y(d.category) * 1.75 + offset,
+						path = d3.path();
 					path.moveTo(x0, y0);
 					path.quadraticCurveTo(cpx, cpy, x1, y1);
 					return path;
 				})
 				.attr("stroke", d => {
-					switch(d.status){
+					switch (d.status) {
 						case "proposed":
 							return "#555";
 						case "orphaned":
 							return "#ccc"
 						default:
-							return "none"		
+							return "none"
 					}
 				})
 				.attr("fill", "transparent")
 				.attr("marker-end", d => {
-					switch(d.status){
+					switch (d.status) {
 						case "proposed":
 							return "url(#proposed-triangle)";
 						case "orphaned":
@@ -610,7 +631,7 @@ function realTimeChartMulti() {
 			endTimeViewport = new Date(startTimeViewport.getTime() + interval);
 			extent = [startTimeViewport, endTimeViewport];
 			viewport.extent(extent);
-			
+
 			// update scales
 			x.domain(extent);
 			xNav.domain([startTime, endTime]);
