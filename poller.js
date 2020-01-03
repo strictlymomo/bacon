@@ -15,21 +15,70 @@ async function init() {
         },
         getHeadSlot: async function () {
             return parseInt((await this.getChainhead()).headSlot);
-        }
+        },
+        getHeadEpoch: async function () {
+            return parseInt((await this.getChainhead()).headEpoch);
+        },
     }
 
     const BLOCKS = {
-        URL: "/beacon/blocks?slot=",
+        SLOT_URL: "/beacon/blocks?slot=",
+        EPOCH_URL: "/beacon/blocks?epoch=",
         getBlock: async function (param) {
-            return await fetch(`${BASE_URL}${this.URL}${param}`)
+            return await fetch(`${BASE_URL}${this.SLOT_URL}${param}`)
                 .then(response => response.json())
                 .then(data => (data.blockContainers.length === 1) ? data.blockContainers[0] : null);
+        },
+        getBlocksByEpoch: async function(param) {
+            return await fetch(`${BASE_URL}${this.EPOCH_URL}${param}`)
+                .then(response => response.json())
+                .then(data => data.blockContainers);
+        },
+        getBlocksForPreviousEpochs: async function (headEpoch) {
+            const pe1 = headEpoch - 1;
+            const pe2 = headEpoch - 2;
+            // let prevEpochs = [pe2, pe1, headEpoch];
+            let prevEpochs = consecutive(0,15)
+            console.log("prevEpochs:                ", prevEpochs);
+            
+            let blockContainersInPrevEpochs = [];
+            console.log("%c                            GETTING BLOCKS FOR PREVIOUS EPOCHS", "color: gray");
+            for (const epoch of prevEpochs) {
+                // console.log("epoch                  ", epoch);
+                let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
+                // console.log("                           ", blockContainersInEpoch);
+                blockContainersInEpoch.forEach(blockContainer => {
+                    // console.log("                           ", blockContainer.block.slot, "   |   ", base64toHEX(blockContainer.block.parentRoot).substr(2,4), " / ", base64toHEX(blockContainer.blockRoot).substr(2,4), "   |   ", parseInt(blockContainer.block.slot) % 8);
+                    // PUSH BLOCK
+                    blockContainersInPrevEpochs.push(blockContainer);
+                });
+            } 
+            blockContainersInPrevEpochs.forEach((blockContainer,i) => {
+                let currSlot = blockContainersInPrevEpochs[i].block.slot;
+
+                if (currSlot > 0) {
+                    // measure different with previous
+                    let prevSlot = blockContainersInPrevEpochs[i - 1].block.slot;
+                    let difference = currSlot - prevSlot;
+                    if (difference > 1) {
+                        let counter = parseInt(prevSlot) + 1;
+                        do {
+                            difference--;
+                            console.log(`%c                            ${counter}`, "color: orange");
+                            counter++;
+                        } while (difference > 1);
+                    };
+                } 
+                console.log("                           ", blockContainer.block.slot, "   |   ", base64toHEX(blockContainer.block.parentRoot).substr(2,4), " / ", base64toHEX(blockContainer.blockRoot).substr(2,4), "   |   ", parseInt(blockContainer.block.slot) % 8);
+            })
+            
         },
     }
 
     let status = {
         headBlockRoot: "",
         headSlot: "",
+        headEpoch: "",
         previousBlockRoot: "",
         previousSlot: "",
         currentBlock: {},
@@ -40,6 +89,7 @@ async function init() {
 
     // Start
     await getInitial();
+    await BLOCKS.getBlocksForPreviousEpochs(status.headEpoch);
 
     // TODO: render chainhead, epoch, block, etc.
 
@@ -53,6 +103,10 @@ async function init() {
         // Get Current Slot
         status.headSlot = await CHAINHEAD.getHeadSlot();
         console.log("%cHead Slot:                 ", "font-weight: bold", status.headSlot);
+        
+        // Get Current Epoch
+        status.headEpoch = await CHAINHEAD.getHeadEpoch();
+        console.log("%cHead Epoch:                ", "font-weight: bold", status.headEpoch);
 
         // Get Block
         status.currentBlock = await BLOCKS.getBlock(status.headSlot);
@@ -161,6 +215,15 @@ async function init() {
             hex += (_hex.length == 2 ? _hex : "0" + _hex);
         }
         return hex;
+    }
+
+    // test functions
+    function consecutive(a,b) {
+        let arr = [];
+        for (b; b >= a; b--) {
+            arr.push(b);
+        }
+        return arr.reverse();
     }
 }
 
