@@ -49,17 +49,12 @@ async function initialize() {
 
 	// mean and deviation for generation of time intervals
 	let tX = 12; // time constant, multiple of one second
-	let meanMs = 1000 * tX, // milliseconds
-		dev = 200 * tX; // std dev
-
+	
 	// define time scale
 	let timeScale = d3.scaleLinear()
 		.domain([300 * tX, 1700 * tX])
 		.range([300 * tX, 1700 * tX])
 		.clamp(true);
-
-	// define function that returns normally distributed random numbers
-	let normal = d3.randomNormal(meanMs, dev);
 
 	// in a normal use case, real time data would arrive through the network or some other mechanism
 	let d = -1;
