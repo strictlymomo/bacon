@@ -3,7 +3,7 @@
 function realTimeChartMulti() {
 
 	let datum, data,
-		maxSeconds = 300, pixelsPerSecond = 10,
+		maxSeconds, pixelsPerSecond = 10,
 		svgWidth = 700, svgHeight = 300,
 		margin = { top: 20, bottom: 20, left: 100, right: 30, topNav: 10, bottomNav: 20 },
 		dimension = { chartTitle: 20, xAxis: 20, yAxis: 20, xTitle: 20, yTitle: 20, navChart: 70 },
@@ -11,7 +11,6 @@ function realTimeChartMulti() {
 		drawXAxis = true, drawYAxis = true, drawNavChart = true,
 		border,
 		selection,
-		barId = 0,
 		yDomain = [],
 		debug = false,
 		halted = false,
@@ -23,7 +22,8 @@ function realTimeChartMulti() {
 		xAxis, yAxis,
 		svg,
 		backgroundColor,
-		offset;
+		offset,
+		headSlotTimeOffset;
 
 	/* 	------------------------------------------------------------------------------------
 		create the chart
@@ -42,6 +42,10 @@ function realTimeChartMulti() {
 		yTitle = yTitle || "";
 		backgroundColor = backgroundColor || "#f5f5f5";
 
+		// process time
+		maxSeconds = maxSeconds || 300;
+		headSlotTimeOffset = headSlotTimeOffset || 0;
+
 		// compute component dimensions
 		let chartTitleDim = chartTitle == "" ? 0 : dimension.chartTitle,
 			xTitleDim = xTitle == "" ? 0 : dimension.xTitle,
@@ -52,12 +56,11 @@ function realTimeChartMulti() {
 
 		// compute dimension of main and nav charts, and offsets
 		let marginTop = margin.top + chartTitleDim;
-		height = svgHeight - marginTop - margin.bottom - chartTitleDim - xTitleDim - xAxisDim - navChartDim + 30;
-		heightNav = navChartDim - margin.topNav - margin.bottomNav;
+			height = svgHeight - marginTop - margin.bottom - chartTitleDim - xTitleDim - xAxisDim - navChartDim + 30;
+			heightNav = navChartDim - margin.topNav - margin.bottomNav;
 		let marginTopNav = svgHeight - margin.bottom - heightNav - margin.topNav;
-		width = svgWidth - margin.left - margin.right;
-		widthNav = width;
-
+			width = svgWidth - margin.left - margin.right;
+			widthNav = width;
 		offset = 4;
 
 		// append the svg
@@ -240,7 +243,7 @@ function realTimeChartMulti() {
 			---------------------------------------- */
 
 		// compute initial time domains...
-		let ts = new Date().getTime();
+		let ts = new Date(new Date().getTime() + headSlotTimeOffset);
 
 		// first, the full time domain
 		let endTime = new Date(ts);
@@ -618,7 +621,8 @@ function realTimeChartMulti() {
 			let offset = extent[0].getTime() - xNav.domain()[0].getTime();
 
 			// compute new nav extents
-			endTime = new Date();
+			// endTime = new Date();
+			endTime = new Date(new Date().getTime() + headSlotTimeOffset);
 			startTime = new Date(endTime.getTime() - maxSeconds * 1000);
 
 			// compute new viewport extents 
@@ -719,6 +723,20 @@ function realTimeChartMulti() {
 	chart.backgroundColor = function (_) {
 		if (arguments.length == 0) return backgroundColor;
 		backgroundColor = _;
+		return chart;
+	}
+
+	// timeframe
+	chart.maxSeconds = function (_) {
+		if (arguments.length == 0) return maxSeconds;
+		maxSeconds = _;
+		return chart;
+	}
+
+	// timeframe
+	chart.headSlotTimeOffset = function (_) {
+		if (arguments.length == 0) return headSlotTimeOffset;
+		headSlotTimeOffset = _;
 		return chart;
 	}
 

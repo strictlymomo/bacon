@@ -3,9 +3,18 @@
 async function init() {
 
 	/* 	-----------------------------------
-		Dummy Prysm Data
+		Beacon Chain Config
 		----------------------------------- */
 
+	const EPOCHS_AGO = 3; //TODO: scale the visualization extents to handle this number
+	const KICKOFF = new Date(new Date().getTime());
+	const SLOT_INTERVAL = 12000;
+	const ACTIVE_VALIDATOR_SET = 1000;
+
+	/* 	-----------------------------------
+		Dummy Prysm Data
+		----------------------------------- */
+	
 	let sampleBlock = await getSampleBlock(217540);
 
 	/* 	-----------------------------------
@@ -24,7 +33,9 @@ async function init() {
 		.border(true)
 		.width(900)
 		.height(600)
-		.backgroundColor("#FFFFFF");
+		.backgroundColor("#FFFFFF")
+		.maxSeconds(450)
+		.headSlotTimeOffset(8 * SLOT_INTERVAL);	// for visualizing beyond the top boundary of an epoch
 
 	// invoke the chart
 	let chartDiv = d3.select("#viewDiv").append("div")
@@ -35,25 +46,19 @@ async function init() {
 	d3.select("#debug").on("change", function () {
 		let state = d3.select(this).property("checked")
 		chart.debug(state);
-	})
+	});
 
 	// event handler for halt checkbox
 	d3.select("#halt").on("change", function () {
 		let state = d3.select(this).property("checked")
 		chart.halt(state);
-	})
+	});
 
 	/* 	-----------------------------------
 		Configure the data generator
 		----------------------------------- */
 
 	// in a normal use case, real time data would arrive through the network or some other mechanism
-
-	const EPOCHS_AGO = 3; //TODO: scale the visualization extents to handle this number
-	const KICKOFF = new Date(new Date().getTime());
-	const SLOT_INTERVAL = 12000;
-	const ACTIVE_VALIDATOR_SET = 1000;
-
 	let d = EPOCHS_AGO * -8;
 	let timeout = 0;
 
@@ -90,7 +95,7 @@ async function init() {
 			// drive data into the chart at designated slot interval
 			timeout = SLOT_INTERVAL;
 
-			generateEpoch(d, now, false)
+			generateEpoch(d, now, false);
 			generateBlock(d, now);
 
 			// TODO: circle packing ATTESTATIONS
