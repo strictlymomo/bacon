@@ -383,7 +383,7 @@ function realTimeChartMulti() {
 							stroke="black"
 							stroke-opacity=".17"
 						>
-						${justificationAnimationTemplate()}	
+						${justificationAnimationTemplate(d.finalized)}	
 						</line>
 						<text 
 							x="${offset}" 
@@ -391,13 +391,14 @@ function realTimeChartMulti() {
 							font-size=".71em" 
 							fill="black"
 						>Epoch ${d.label}
-						${justificationAnimationTemplate()}
+						${justificationAnimationTemplate(d.finalized)}
 						</text>
 						`
 				});
 
-			function justificationAnimationTemplate() {
-				return `<animate id="animation1"
+			function justificationAnimationTemplate(finalized) {
+				if (!finalized) {
+					return `<animate id="animation1"
 					attributeName="opacity"
 					from="0" to="1" dur="3s"
 					begin="0s;animation2.end" />
@@ -405,6 +406,8 @@ function realTimeChartMulti() {
 					attributeName="opacity"
 					from="1" to="0" dur="3s" 
 					begin="animation1.end" />`;
+				}
+				return "";
 			}	
 
 			updateEpochsSel
