@@ -61,7 +61,7 @@ async function init() {
 	generatePrevData(d);
 
 	// start the data generator
-	d = -1;	//reset d to kickoff poller
+	d = -1;	// reset d to kickoff poller
 	generateData();
 
 
@@ -104,9 +104,8 @@ async function init() {
 	function generateEpoch(d, timestamp, status) {
 		if (Math.abs(d) % 8 === 0) {
 			let epoch = {
-				time: timestamp,
 				category: "Epochs",
-				type: "g",
+				time: timestamp,
 				label: (Math.round(d / 8)).toString(),
 				finalized: status
 			};
@@ -139,9 +138,7 @@ async function init() {
 
 		let block = {
 			category: "Blocks",
-			type: "g",
 			size: 24,
-			// -----------------
 			// epoch: getAssociatedEpoch();
 			slot: d.toString(),
 			time: timestamp,
@@ -149,8 +146,6 @@ async function init() {
 			proposedBy: generateRandomValidator(ACTIVE_VALIDATOR_SET),			
 			votes: generateRandomAttestations(status, ACTIVE_VALIDATOR_SET),
 		};
-
-		console.log("BLOCK:", block);
 
 		chart.datum(block);
 	}
@@ -170,11 +165,11 @@ async function init() {
 		let maxAttestations = Math.round(activeValidatorSet / committeeSize);
 		switch (status) {
 			case "orphaned":
-				return Math.round(Math.random(0,1) * maxAttestations);
+				return Math.round(Math.random() * maxAttestations);
 			case "missing":
 				return 0;
 			case "proposed":
-				return Math.round(Math.random(0,1) * maxAttestations);
+				return Math.round(Math.random() * maxAttestations);
 		}
 	}
 

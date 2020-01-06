@@ -364,37 +364,21 @@ function realTimeChartMulti() {
 			updateEpochsSel.enter()
 				.append("g")
 				.attr("class", "bar")
-				.attr("id", function () {
-					return "bar-" + barId++;
+				.attr("id", d => {
+					return "bar-" + d.label;
 				})
-				.attr("transform", d => {
-					let retValX = Math.round(x(d.time));
-					let retValY = y(d.category);
-					return `translate(${retValX},${retValY})`;
-				})
-				.html(d => {
-					// console.log("d", d);
-					return `
-						<line
-							x1="0" 
-							x2="0" 
-							y1="${-(y(d.category) * 2)}"
-							y2="${y(d.category)}"
-							stroke="black"
-							stroke-opacity=".17"
-						>
-						${justificationAnimationTemplate(d.finalized)}	
-						</line>
-						<text 
-							x="${offset}" 
-							y="${-(y(d.category)) + 8}" 
-							font-size=".71em" 
-							fill="black"
-						>Epoch ${d.label}
-						${justificationAnimationTemplate(d.finalized)}
-						</text>
-						`
-				});
+				.attr("transform", d => translateEpoch(d))
+				.html(d => epochTemplate(d));
+
+			updateEpochsSel
+				.attr("transform", d => translateEpoch(d))
+				.html(d => epochTemplate(d));
+
+			function translateEpoch(d) {
+				let retValX = Math.round(x(d.time));
+				let retValY = y(d.category);
+				return `translate(${retValX},${retValY})`;
+			}
 
 			function justificationAnimationTemplate(finalized) {
 				if (!finalized) {
@@ -408,14 +392,30 @@ function realTimeChartMulti() {
 					begin="animation1.end" />`;
 				}
 				return "";
-			}	
+			}
 
-			updateEpochsSel
-				.attr("transform", d => {
-					let retValX = Math.round(x(d.time));
-					let retValY = y(d.category);
-					return `translate(${retValX},${retValY})`;
-				});
+			function epochTemplate(d) {
+				return `
+					<line
+						x1="0" 
+						x2="0" 
+						y1="${-(y(d.category) * 2)}"
+						y2="${y(d.category)}"
+						stroke="black"
+						stroke-opacity=".17"
+					>
+					${justificationAnimationTemplate(d.finalized)}	
+					</line>
+					<text 
+						x="${offset}" 
+						y="${-(y(d.category)) + 8}" 
+						font-size=".71em" 
+						fill="black"
+					>Epoch ${d.label}
+					${justificationAnimationTemplate(d.finalized)}
+					</text>
+				`;
+			}
 
 			/* 	------------------------------------------------------------------------------------
 				BLOCKS
@@ -457,33 +457,33 @@ function realTimeChartMulti() {
 
 			function blockTemplate(d) {
 				return `
-					<line
-						class="slot_line not-justified" 
-						x1="0" 
-						x2="0" 
-						y1="${-(y(d.category))}"
-						y2="${y(d.category) * 3}"
-						stroke="${(d.color || "black")}"
-						stroke-opacity=".07"
-					>
-					</line>
-					<rect 
-						class="block"
-						x="${offset}"
-						y="${-(y(d.category) / 2)}" 
-						width="${getSlotWidth(d) - (offset * 2)}"
-						height="${y(d.category)}"
-						fill="${mapBlockStatusToColor(d)}"
-						stroke="none"
-					></rect>
-					<text 
-						x="${offset}"
-						y="${-(y(d.category) / 2) - 6}"
-						font-size=".71em" 
-						fill="black"
-						opacity=".17"
-						>${d.slot}</text>
-					`;
+				<line
+					class="slot_line" 
+					x1="0" 
+					x2="0" 
+					y1="${-(y(d.category))}"
+					y2="${y(d.category) * 3}"
+					stroke="${(d.color || "black")}"
+					stroke-opacity=".07"
+				>
+				</line>
+				<rect 
+					class="block"
+					x="${offset}"
+					y="${-(y(d.category) / 2)}" 
+					width="${getSlotWidth(d) - (offset * 2)}"
+					height="${y(d.category)}"
+					fill="${mapBlockStatusToColor(d)}"
+					stroke="none"
+				></rect>
+				<text 
+					x="${offset}"
+					y="${-(y(d.category) / 2) - 6}"
+					font-size=".71em" 
+					fill="black"
+					opacity=".17"
+					>${d.slot}</text>
+				`;
 			}
 
 			function getSlotWidth(d) {
