@@ -64,7 +64,7 @@ function realTimeChartMulti() {
 		svg = selection.append("svg")
 			.attr("width", svgWidth)
 			.attr("height", svgHeight)
-			.style("border", function (d) {
+			.style("border", () => {
 				if (border) return "1px solid lightgray";
 				else return null;
 			});
@@ -113,7 +113,7 @@ function realTimeChartMulti() {
 			.attr("x", width / 2)
 			.attr("y", 25)
 			.attr("dy", ".71em")
-			.text(function (d) {
+			.text(() => {
 				let text = xTitle == undefined ? "" : xTitle;
 				return text;
 			});
@@ -125,7 +125,7 @@ function realTimeChartMulti() {
 			.attr("x", - height / 2)
 			.attr("y", -margin.left + 15) //-35
 			.attr("dy", ".71em")
-			.text(function (d) {
+			.text(() => {
 				let text = yTitle == undefined ? "" : yTitle;
 				return text;
 			});
@@ -136,7 +136,7 @@ function realTimeChartMulti() {
 			.attr("x", width / 2)
 			.attr("y", -20)
 			.attr("dy", ".71em")
-			.text(function (d) {
+			.text(() => {
 				let text = chartTitle == undefined ? "" : chartTitle;
 				return text;
 			});
@@ -323,7 +323,7 @@ function realTimeChartMulti() {
 		function refresh() {
 
 			// process data to remove too late data items 
-			data = data.filter(function (d) {
+			data = data.filter(d => {
 				if (d.time.getTime() > startTime.getTime()) return true;
 			})
 
@@ -367,12 +367,12 @@ function realTimeChartMulti() {
 				.attr("id", function () {
 					return "bar-" + barId++;
 				})
-				.attr("transform", function (d) {
+				.attr("transform", d => {
 					let retValX = Math.round(x(d.time));
 					let retValY = y(d.category);
 					return `translate(${retValX},${retValY})`;
 				})
-				.html(function (d) {
+				.html(d => {
 					// console.log("d", d);
 					return `
 						<line
@@ -411,7 +411,7 @@ function realTimeChartMulti() {
 			}	
 
 			updateEpochsSel
-				.attr("transform", function (d) {
+				.attr("transform", d => {
 					let retValX = Math.round(x(d.time));
 					let retValY = y(d.category);
 					return `translate(${retValX},${retValY})`;
@@ -429,17 +429,17 @@ function realTimeChartMulti() {
 
 			// add items
 			updateBlocksSel.enter()
-				.append(function (d) {
+				.append(d => {
 					if (debug) { console.log("d", JSON.stringify(d)); }
 					let type = "g";
 					let node = document.createElementNS("http://www.w3.org/2000/svg", type);
 					return node;
 				})
 				.attr("class", "bar")
-				.attr("id", function () {
+				.attr("id", () => {
 					return "bar-" + barId++;
 				})
-				.attr("transform", function (d) {
+				.attr("transform", d => {
 					let retValX = Math.round(x(d.time));
 					let retValY = y(d.category);
 					return `translate(${retValX},${retValY})`;
@@ -448,7 +448,7 @@ function realTimeChartMulti() {
 
 			// update items; added items are now part of the update selection
 			updateBlocksSel
-				.attr("transform", function (d) {
+				.attr("transform", d => {
 					let retValX = Math.round(x(d.time));
 					let retValY = y(d.category);
 					return `translate(${retValX},${retValY})`;
@@ -524,7 +524,7 @@ function realTimeChartMulti() {
 			updateRootsSel.enter()
 				.append("path")
 				.attr("class", "bar")
-				.attr("id", function () {
+				.attr("id", () => {
 					return "bar-" + barId++;
 				});
 
@@ -603,10 +603,10 @@ function realTimeChartMulti() {
 
 			// added items now part of update selection; set coordinates of points
 			updateBlocksSelNav
-				.attr("cx", function (d) {
+				.attr("cx", d => {
 					return Math.round(xNav(d.time));
 				})
-				.attr("cy", function (d) {
+				.attr("cy", d => {
 					return yNav(d.category);
 				})
 

@@ -1,6 +1,6 @@
 'use strict';
 
-async function initialize() {
+async function init() {
 
 	/* 	-----------------------------------
 		Dummy Prysm Data
@@ -15,7 +15,7 @@ async function initialize() {
 	let chart = realTimeChartMulti()
 		.title("Beacon Chain")
 		.xTitle("Time")
-		.yTitle("Categories")
+		.yTitle("Elements")
 		.yDomain([
 			"Epochs",
 			"Blocks",
@@ -52,6 +52,7 @@ async function initialize() {
 	const EPOCHS_AGO = 3; //TODO: scale the visualization extents to handle this number
 	const KICKOFF = new Date(new Date().getTime());
 	const SLOT_INTERVAL = 12000;
+	const ACTIVE_VALIDATOR_SET = 1000;
 
 	let d = EPOCHS_AGO * -8;
 	let timeout = 0;
@@ -72,7 +73,7 @@ async function initialize() {
 		for (d; d <= -1; d++) {
 			const SECONDS_AGO = Math.abs(d) * SLOT_INTERVAL;
 			const TIMESTAMP = new Date(KICKOFF.getTime() - SECONDS_AGO);
-			generatePrevEpoch(d, TIMESTAMP);
+			generateEpoch(d, TIMESTAMP, true);
 			generateBlock(d, TIMESTAMP);
 		}
 	}
@@ -89,7 +90,7 @@ async function initialize() {
 			// drive data into the chart at designated slot interval
 			timeout = SLOT_INTERVAL;
 
-			generateEpoch(d, now)
+			generateEpoch(d, now, false)
 			generateBlock(d, now);
 
 			// TODO: circle packing ATTESTATIONS
@@ -100,35 +101,33 @@ async function initialize() {
 		}, timeout);
 	}
 
-	function generatePrevEpoch(d, timestamp) {
+	function generateEpoch(d, timestamp, status) {
 		if (Math.abs(d) % 8 === 0) {
-			chart.datum({
+			let epoch = {
 				time: timestamp,
 				category: "Epochs",
 				type: "g",
-				size: Math.max(Math.round(Math.random() * 12), 4),
 				label: (Math.round(d / 8)).toString(),
-				finalized: true
-			});
-		}
-	}
-
-	function generateEpoch(d, timestamp) {
-		if (d % 8 === 0) {
-			chart.datum({
-				time: timestamp,
-				category: "Epochs",
-				type: "g",
-				size: Math.max(Math.round(Math.random() * 12), 4),
-				label: Math.round(d / 8).toString(),
-				finalized: false
-			});
+				finalized: status
+			};
+			chart.datum(epoch);
 		}
 	}
 
 	function generateBlock(d, timestamp) {
-		/*
-			Block at Slot 226282
+		// random block status
+		let seed = Math.random();
+		let status;
+
+		if (seed < .1) {
+			status = "orphaned";
+		} else if (seed < .4) {
+			status = "missing";
+		} else {
+			status = "proposed";
+		}
+
+		/*	Example Block
 				
 			Epoch: 			28285
 			Slot: 			226282
@@ -138,29 +137,22 @@ async function initialize() {
 			Votes:			[...]
 		*/
 
-		// random block status
-		let seed = Math.random();
-		let status;
-		let attestations = 0;
-
-		if (seed < .1) {
-			status = "orphaned";
-		} else if (seed < .4) {
-			status = "missing";
-		} else {
-			status = "proposed";
-			attestations = Math.round(Math.random(0, 100));
-		}
-
-		chart.datum({
-			time: timestamp,
+		let block = {
 			category: "Blocks",
 			type: "g",
 			size: 24,
-			status: status,
+			// -----------------
+			// epoch: getAssociatedEpoch();
 			slot: d.toString(),
-			votes: attestations
-		});
+			time: timestamp,
+			status: status,
+			proposedBy: generateRandomValidator(ACTIVE_VALIDATOR_SET),			
+			votes: generateRandomAttestations(status, ACTIVE_VALIDATOR_SET),
+		};
+
+		console.log("BLOCK:", block);
+
+		chart.datum(block);
 	}
 
 	async function getSampleBlock(slot) {
@@ -169,6 +161,23 @@ async function initialize() {
 			.then(data => (data.blockContainers.length === 1) ? data.blockContainers[0] : null);
 	}
 
-} // end initialize function
+	function generateRandomValidator(activeValidatorSet) {
+		return Math.round(Math.random(0,1) * activeValidatorSet);
+	}
 
-initialize();
+	function generateRandomAttestations(status, activeValidatorSet) {
+		let committeeSize = 32;
+		let maxAttestations = Math.round(activeValidatorSet / committeeSize);
+		switch (status) {
+			case "orphaned":
+				return Math.round(Math.random(0,1) * maxAttestations);
+			case "missing":
+				return 0;
+			case "proposed":
+				return Math.round(Math.random(0,1) * maxAttestations);
+		}
+	}
+
+} // end init function
+
+init();
