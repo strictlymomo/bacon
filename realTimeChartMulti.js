@@ -310,7 +310,7 @@ function realTimeChartMulti() {
 		// create group and assign to brush
 		let viewportG = nav.append("g")
 			.attr("class", "viewport")
-			.call(viewport)						// BONKED
+			.call(viewport)
 			.call(viewport.move, xNav.range());
 
 		/* 	------------------------------------------------------------------------------------
@@ -364,9 +364,7 @@ function realTimeChartMulti() {
 			updateEpochsSel.enter()
 				.append("g")
 				.attr("class", "bar")
-				.attr("id", d => {
-					return "bar-" + d.label;
-				})
+				.attr("id", d => `bar-${d.label}`)
 				.attr("transform", d => translateEpoch(d))
 				.html(d => epochTemplate(d));
 
@@ -436,24 +434,20 @@ function realTimeChartMulti() {
 					return node;
 				})
 				.attr("class", "bar")
-				.attr("id", () => {
-					return "bar-" + barId++;
-				})
-				.attr("transform", d => {
-					let retValX = Math.round(x(d.time));
-					let retValY = y(d.category);
-					return `translate(${retValX},${retValY})`;
-				})
+				.attr("id", d => `bar-${d.slot}`)
+				.attr("transform", d => translateBlock(d))
 				.html(d => blockTemplate(d));
 
 			// update items; added items are now part of the update selection
 			updateBlocksSel
-				.attr("transform", d => {
-					let retValX = Math.round(x(d.time));
-					let retValY = y(d.category);
-					return `translate(${retValX},${retValY})`;
-				})
+				.attr("transform", d => translateBlock(d))
 				.html(d => blockTemplate(d));
+
+			function translateBlock(d) {
+				let retValX = Math.round(x(d.time));
+				let retValY = y(d.category);
+				return `translate(${retValX},${retValY})`;
+			}
 
 			function blockTemplate(d) {
 				return `
@@ -494,15 +488,15 @@ function realTimeChartMulti() {
 
 			function mapBlockStatusToColor(d) {
 				let retVal = "none";
-				switch (d.category) {
-					case "Blocks":
-						if (d.status === "proposed") {
-							retVal = "#28a745"
-						} else if (d.status === "orphaned") {
-							retVal = "#aaa"
-						} else {
-							retVal = "white"
-						};
+				switch (d.status) {
+					case "proposed":
+						retVal = "#28a745";
+						break;
+					case "orphaned":
+						retVal = "#aaa";
+						break;
+					case "missing":
+						retVal = "white"
 						break;
 					default:
 				}
@@ -524,9 +518,7 @@ function realTimeChartMulti() {
 			updateRootsSel.enter()
 				.append("path")
 				.attr("class", "bar")
-				.attr("id", () => {
-					return "bar-" + barId++;
-				});
+				.attr("id", d => `bar-root-${d.slot}`); //TODO: block root
 
 			// update items; added items are now part of the update selection
 			updateRootsSel
