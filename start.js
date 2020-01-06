@@ -47,15 +47,6 @@ async function initialize() {
 		Configure the data generator
 		----------------------------------- */
 
-	// mean and deviation for generation of time intervals
-	let tX = 12; // time constant, multiple of one second
-	
-	// define time scale
-	let timeScale = d3.scaleLinear()
-		.domain([300 * tX, 1700 * tX])
-		.range([300 * tX, 1700 * tX])
-		.clamp(true);
-
 	// in a normal use case, real time data would arrive through the network or some other mechanism
 	let d = -1;
 	let timeout = 0;
