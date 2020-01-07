@@ -395,13 +395,14 @@ function realTimeChartMulti() {
 				return "";
 			}
 
+			// y1="${-(y(d.category) * 2)}"
 			function epochTemplate(d) {
 				return `
 					<line
 						x1="0" 
 						x2="0" 
-						y1="${-(y(d.category) * 2)}"
-						y2="${y(d.category)}"
+						y1="${-y(d.category)}"
+						y2="${svgHeight}"
 						stroke="black"
 						stroke-opacity=".17"
 					>
@@ -467,18 +468,19 @@ function realTimeChartMulti() {
 				<rect 
 					class="block"
 					x="${offset}"
-					y="${-(y(d.category) / 2)}" 
+					y="${-(y(d.category) / 4)}" 
 					width="${getSlotWidth(d) - (offset * 2)}"
-					height="${y(d.category)}"
+					height="${y(d.category) / 2}"
 					fill="${mapBlockStatusToColor(d)}"
 					stroke="none"
 				></rect>
 				<text 
 					x="${offset}"
-					y="${-(y(d.category) / 2) - 6}"
+					y="${-(y(d.category) / 4) - 6}"
 					font-size=".71em" 
 					fill="black"
 					opacity=".17"
+					${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
 					>${d.slot}</text>
 				`;
 			}
@@ -527,11 +529,11 @@ function realTimeChartMulti() {
 			updateRootsSel
 				.attr("d", (d, i) => {
 					const x0 = Math.round(x(d.time)) + (d.size / 4) + offset,
-						y0 = y(d.category) * 1.5 + offset + 1,
+						y0 = y(d.category) + (y(d.category) / 4) + offset + 1,
 						x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size * 3 / 4) + offset,
 						y1 = y0,
 						cpx = x1 + ((x0 - x1) * .5),
-						cpy = y(d.category) * 1.75 + offset,
+						cpy = y(d.category) + (3 * y(d.category) / 8 ) + offset + 1,
 						path = d3.path();
 					path.moveTo(x0, y0);
 					path.quadraticCurveTo(cpx, cpy, x1, y1);

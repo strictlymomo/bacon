@@ -26,10 +26,11 @@ async function init() {
 		.xTitle("Time")
 		.yTitle("Elements")
 		.yDomain([
-			"Epochs",
+			"Attestations",
+			"Proposer",
 			"Blocks",
-			// "Attestations"
-		]) // initial y domain (note array)
+			"Epochs"
+		]) // initial y domain (note array)	
 		.border(true)
 		.width(900)
 		.height(600)
