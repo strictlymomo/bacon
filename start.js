@@ -6,12 +6,15 @@ async function init() {
 		Beacon Chain Config
 		----------------------------------- */
 
-	const EPOCHS_AGO = 3; //TODO: scale the visualization extents to handle this number
-	const KICKOFF = new Date(new Date().getTime());
-	const SLOT_INTERVAL = 12000;
-	const ACTIVE_VALIDATOR_SET = 1000;
+	const EPOCHS_AGO = 3;
+	const SLOTS_PER_EPOCH = 32;
+	const SECONDS_PER_SLOT = 12;
+	const SLOT_INTERVAL = SECONDS_PER_SLOT * 1000;
+	let maxSeconds = (EPOCHS_AGO * SLOTS_PER_EPOCH * SECONDS_PER_SLOT) + (1 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT);
 
-	/* 	-----------------------------------
+	const KICKOFF = new Date(new Date().getTime());
+	const ACTIVE_VALIDATOR_SET = 1000;
+ 	/* 	-----------------------------------
 		Dummy Prysm Data
 		----------------------------------- */
 	
@@ -26,17 +29,17 @@ async function init() {
 		.xTitle("Time")
 		.yTitle("Elements")
 		.yDomain([
+			"_",
 			"Attestations",
-			"Proposer",
 			"Blocks",
-			"Epochs"
+			"Epochs",
 		]) // initial y domain (note array)	
 		.border(true)
-		.width(900)
-		.height(600)
+		.width(1440)
+		.height(900)
 		.backgroundColor("#FFFFFF")
-		.maxSeconds(450)
-		.headSlotTimeOffset(8 * SLOT_INTERVAL);	// for visualizing beyond the top boundary of an epoch
+		.maxSeconds(maxSeconds)
+		.headSlotTimeOffset(SLOTS_PER_EPOCH * SLOT_INTERVAL);	// for visualizing beyond the top boundary of an epoch
 
 	// invoke the chart
 	let chartDiv = d3.select("#viewDiv").append("div")
@@ -60,7 +63,7 @@ async function init() {
 		----------------------------------- */
 
 	// in a normal use case, real time data would arrive through the network or some other mechanism
-	let d = EPOCHS_AGO * -8;
+	let d = EPOCHS_AGO * -SLOTS_PER_EPOCH;
 	let timeout = 0;
 
 	/* prepend recent chain data prior to the current head slot */
@@ -108,11 +111,11 @@ async function init() {
 	}
 
 	function generateEpoch(d, timestamp, status) {
-		if (Math.abs(d) % 8 === 0) {
+		if (Math.abs(d) % SLOTS_PER_EPOCH === 0) {
 			let epoch = {
 				category: "Epochs",
 				time: timestamp,
-				label: (Math.round(d / 8)).toString(),
+				label: (Math.round(d / SLOTS_PER_EPOCH)).toString(),
 				finalized: status
 			};
 			chart.datum(epoch);
