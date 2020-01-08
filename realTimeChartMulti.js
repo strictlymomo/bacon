@@ -107,8 +107,8 @@ function realTimeChartMulti() {
 			.attr("transform", "translate(0," + height + ")");
 
 		// add group for y axis
-		yAxisG = main.append("g")
-			.attr("class", "y axis");
+		// yAxisG = main.append("g")
+		// 	.attr("class", "y axis");
 
 		// in x axis group, add x axis title
 		xAxisG.append("text")
@@ -122,16 +122,16 @@ function realTimeChartMulti() {
 			});
 
 		// in y axis group, add y axis title
-		yAxisG.append("text")
-			.attr("class", "title")
-			.attr("transform", "rotate(-90)")
-			.attr("x", - height / 2)
-			.attr("y", -margin.left + 15) //-35
-			.attr("dy", ".71em")
-			.text(() => {
-				let text = yTitle == undefined ? "" : yTitle;
-				return text;
-			});
+		// yAxisG.append("text")
+		// 	.attr("class", "title")
+		// 	.attr("transform", "rotate(-90)")
+		// 	.attr("x", - height / 2)
+		// 	.attr("y", -margin.left + 15) //-35
+		// 	.attr("dy", ".71em")
+		// 	.text(() => {
+		// 		let text = yTitle == undefined ? "" : yTitle;
+		// 		return text;
+		// 	});
 
 		// in main group, add chart title
 		main.append("text")
@@ -147,6 +147,10 @@ function realTimeChartMulti() {
 		// define main chart scales
 		x = d3.scaleTime().range([0, width]);
 		y = d3.scalePoint().domain(yDomain).rangeRound([height, 0]).padding(.5)
+
+		/* 	------------------------------------------------------------------------------------
+			scales
+			------------------------------------------------------------------------------------ */
 
 		// define main chart axis
 		xAxis = d3.axisBottom(x);
@@ -218,7 +222,7 @@ function realTimeChartMulti() {
 			.attr("transform", "translate(0, 0)")
 			.attr("clip-path", "url(#myClip")
 			.append("g");
-		
+
 		let attestationsG = main.append("g")
 			.attr("class", "attestationsGroup")
 			.attr("transform", "translate(0, 0)")
@@ -227,7 +231,7 @@ function realTimeChartMulti() {
 
 		/* 	----------------------------------------
 			SVG defs, styles and icons
-			---------------------------------------- */	
+			---------------------------------------- */
 
 		// define root hash arrow
 		svg.append("svg:defs").append("svg:marker")
@@ -253,12 +257,6 @@ function realTimeChartMulti() {
 			.append("path")
 			.attr("d", "M 0 0 6 3 0 6 1.5 3")
 			.style("fill", "#ccc");
-
-		const logos = {
-			star: "M14.615,4.928c0.487-0.986,1.284-0.986,1.771,0l2.249,4.554c0.486,0.986,1.775,1.923,2.864,2.081l5.024,0.73c1.089,0.158,1.335,0.916,0.547,1.684l-3.636,3.544c-0.788,0.769-1.28,2.283-1.095,3.368l0.859,5.004c0.186,1.085-0.459,1.553-1.433,1.041l-4.495-2.363c-0.974-0.512-2.567-0.512-3.541,0l-4.495,2.363c-0.974,0.512-1.618,0.044-1.432-1.041l0.858-5.004c0.186-1.085-0.307-2.6-1.094-3.368L3.93,13.977c-0.788-0.768-0.542-1.525,0.547-1.684l5.026-0.73c1.088-0.158,2.377-1.095,2.864-2.081L14.615,4.928z",
-			apple: "M24.32,10.85c-1.743,1.233-2.615,2.719-2.615,4.455c0,2.079,1.078,3.673,3.232,4.786c-0.578,1.677-1.416,3.134-2.514,4.375c-1.097,1.241-2.098,1.862-3.004,1.862c-0.427,0-1.009-0.143-1.748-0.423l-0.354-0.138c-0.725-0.281-1.363-0.423-1.92-0.423c-0.525,0-1.1,0.11-1.725,0.331l-0.445,0.16l-0.56,0.229c-0.441,0.176-0.888,0.264-1.337,0.264c-1.059,0-2.228-0.872-3.507-2.616c-1.843-2.498-2.764-5.221-2.764-8.167c0-2.095,0.574-3.781,1.725-5.061c1.149-1.279,2.673-1.92,4.568-1.92c0.709,0,1.371,0.13,1.988,0.389l0.423,0.172l0.445,0.183c0.396,0.167,0.716,0.251,0.959,0.251c0.312,0,0.659-0.072,1.04-0.217l0.582-0.229l0.435-0.16c0.693-0.251,1.459-0.377,2.297-0.377C21.512,8.576,23.109,9.334,24.32,10.85zM19.615,3.287c0.021,0.267,0.033,0.473,0.033,0.617c0,1.317-0.479,2.473-1.438,3.467s-2.075,1.49-3.347,1.49c-0.038-0.297-0.058-0.51-0.058-0.639c0-1.12,0.445-2.171,1.337-3.153c0.891-0.982,1.922-1.558,3.096-1.725C19.32,3.329,19.447,3.311,19.615,3.287z",
-			glasses: "M14.075,9.531c0,0-2.705-1.438-5.158-1.438c-2.453,0-4.862,0.593-4.862,0.593L3.971,9.869c0,0,0.19,0.19,0.528,0.53c0.338,0.336,0.486,3.741,1.838,5.094c1.353,1.354,4.82,1.396,5.963,0.676c1.14-0.718,2.241-3.466,2.241-4.693c0-0.38,0-0.676,0-0.676c0.274-0.275,1.615-0.303,1.917,0c0,0,0,0.296,0,0.676c0,1.227,1.101,3.975,2.241,4.693c1.144,0.72,4.611,0.678,5.963-0.676c1.355-1.353,1.501-4.757,1.839-5.094c0.338-0.34,0.528-0.53,0.528-0.53l-0.084-1.183c0,0-2.408-0.593-4.862-0.593c-2.453,0-5.158,1.438-5.158,1.438C16.319,9.292,14.737,9.32,14.075,9.531z"
-		};
 
 		/* 	----------------------------------------
 			scales
@@ -287,7 +285,7 @@ function realTimeChartMulti() {
 
 		// update axis with modified scale
 		xAxis.scale(x)(xAxisG);
-		yAxis.scale(y)(yAxisG);
+		// yAxis.scale(y)(yAxisG);
 		xAxisNav.scale(xNav)(xAxisGNav);
 
 		/* 	----------------------------------------
@@ -417,7 +415,6 @@ function realTimeChartMulti() {
 				return "";
 			}
 
-			// y1="${-(y(d.category) * 2)}"
 			function epochTemplate(d) {
 				return `
 					<line
@@ -435,7 +432,8 @@ function realTimeChartMulti() {
 						y="${-(y(d.category)) + 8}" 
 						font-size=".71em" 
 						fill="black"
-					>Epoch ${d.label}
+					>EPOCH ${d.label}
+						<tspan x="${offset}" dy="1.2em">${d.finalized ? "FINALIZED" : "PENDING"}</tspan>
 					${justificationAnimationTemplate(d.finalized)}
 					</text>
 				`;
@@ -448,7 +446,7 @@ function realTimeChartMulti() {
 			let updateBlocksSel = blocksG.selectAll(".bar")
 				.data(data.filter(d => d.category === "Blocks"));
 
-			let slotWidth = 1;	
+			let slotWidth = 1;
 			if (updateBlocksSel.data().length > 0) {
 				slotWidth = getSlotWidth(updateBlocksSel.data()[3]);
 			}
@@ -477,38 +475,83 @@ function realTimeChartMulti() {
 			function translateBlock(d) {
 				let retValX = Math.round(x(d.time));
 				let retValY = y(d.category);
+				// let retValY = y("Epochs"); 
 				return `translate(${retValX},${retValY})`;
 			}
 
 			function blockTemplate(d) {
+				let text = ``;
+				let line = ``;
+				let image = ``;
+				let missingText = ``;
+				let votes_arr = [];
+
+				if (getSlotWidth(d) > 10) {
+					line = `
+						<line
+							class="slot_line" 
+							x1="0" 
+							x2="0" 
+							y1="${-(y(d.category))}"
+							y2="${y(d.category) * 3}"
+							stroke="${(d.color || "black")}"
+							stroke-opacity=".07"
+						></line>`
+				}
+
+				if (getSlotWidth(d) > 175) {
+					text = `
+						<text 
+							x="${offset}"
+							y="${-(y(d.category) / 4) - 6}"
+							font-size=".71em" 
+							fill="black"
+							opacity=".37"
+							${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
+						>${d.slot}</text>`
+
+					const w = 2;
+					const h = 2;
+					let votes = d.votes;
+					for (votes; votes > 0; votes--) {
+						let vote = `<rect
+							x="${getSlotWidth(d) / 2}"
+							y="${((y(d.category) / 4)) - (2 * h * votes)}"
+							width=${w}
+							height=${h}
+							fill="black"
+							></rect>`;
+						votes_arr.push(vote);
+					};
+
+					if (d.status === "missing") {
+						image = `<image x="${offset}" y="${((y(d.category) / 4))}" width="140" height="100" xlink:href="https://thebridgebk.com/wp-content/uploads/2017/12/LUBIN-e1513902249991.jpg" opacity=".15"/>
+						<text 
+							x="${offset}"
+							y="${-(y(d.category) / 4) + 100}"
+							font-size=".71em" 
+							fill="black"
+							opacity=".37"
+						>Someone lost money</text>`;
+					}
+
+				}
+
 				return `
-				<line
-					class="slot_line" 
-					x1="0" 
-					x2="0" 
-					y1="${-(y(d.category))}"
-					y2="${y(d.category) * 3}"
-					stroke="${(d.color || "black")}"
-					stroke-opacity=".07"
-				>
-				</line>
+				${text}
+				${line}
 				<rect 
 					class="block"
-					x="${offset}"
+					x="${0}"
 					y="${-(y(d.category) / 4)}" 
-					width="${getSlotWidth(d) - (offset * 2)}"
-					height="${y(d.category) / 2}"
+					width="${getSlotWidth(d)}"
+					height="${y(d.category)}"
 					fill="${mapBlockStatusToColor(d)}"
+					opacity=".15"
 					stroke="none"
 				></rect>
-				<text 
-					x="${offset}"
-					y="${-(y(d.category) / 4) - 6}"
-					font-size=".71em" 
-					fill="black"
-					opacity=".37"
-					${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
-					>${d.slot}</text>
+				${image}
+				${votes_arr}
 				`;
 			}
 
@@ -553,40 +596,40 @@ function realTimeChartMulti() {
 				.attr("id", d => `bar-root-${d.slot}`); //TODO: block root
 
 			// update items; added items are now part of the update selection
-			updateRootsSel
-				.attr("d", (d, i) => {
-					const x0 = Math.round(x(d.time)) + (d.size / 4) + offset,
-						y0 = y(d.category) + (y(d.category) / 4) + offset + 1,
-						x1 = getPreviousRootPosition(updateRootsSel, i) + (d.size * 3 / 4) + offset,
-						y1 = y0,
-						cpx = x1 + ((x0 - x1) * .5),
-						cpy = y(d.category) + (3 * y(d.category) / 8) + offset + 1,
-						path = d3.path();
-					path.moveTo(x0, y0);
-					path.quadraticCurveTo(cpx, cpy, x1, y1);
-					return path;
-				})
-				.attr("stroke", d => {
-					switch (d.status) {
-						case "proposed":
-							return "#555";
-						case "orphaned":
-							return "#ccc"
-						default:
-							return "none"
-					}
-				})
-				.attr("fill", "transparent")
-				.attr("marker-end", d => {
-					switch (d.status) {
-						case "proposed":
-							return "url(#proposed-triangle)";
-						case "orphaned":
-							return "url(#orphaned-triangle)"
-						default:
-							return ""
-					}
-				});
+			// updateRootsSel
+			// 	.attr("d", (d, i) => {
+			// 		const x0 = Math.round(x(d.time)) + (slotWidth / 2),
+			// 			y0 = y(d.category) + (y(d.category) / 4),
+			// 			x1 = getPreviousRootPosition(updateRootsSel, i) + (slotWidth * (3/4)),
+			// 			y1 = y0,
+			// 			cpx = x1 + ((x0 - x1) * .5),
+			// 			cpy = y(d.category) + (3 * y(d.category) / 8) + offset + 1,
+			// 			path = d3.path();
+			// 		path.moveTo(x0, y0);
+			// 		path.quadraticCurveTo(cpx, cpy, x1, y1);
+			// 		return path;
+			// 	})
+			// 	.attr("stroke", d => {
+			// 		switch (d.status) {
+			// 			case "proposed":
+			// 				return "#555";
+			// 			case "orphaned":
+			// 				return "#ccc"
+			// 			default:
+			// 				return "none"
+			// 		}
+			// 	})
+			// 	.attr("fill", "transparent")
+			// 	.attr("marker-end", d => {
+			// 		switch (d.status) {
+			// 			case "proposed":
+			// 				return "url(#proposed-triangle)";
+			// 			case "orphaned":
+			// 				return "url(#orphaned-triangle)"
+			// 			default:
+			// 				return ""
+			// 		}
+			// 	});
 
 			// TODO: calling this function kills memory. store the root hashes or rely on the API
 			function getPreviousRootPosition(selection, i) {
@@ -613,61 +656,61 @@ function realTimeChartMulti() {
 				PROPOSERS
 				------------------------------------------------------------------------------------ */
 
-			let updateProposersSel = proposersG.selectAll(".bar")
-				.data(data.filter(d => d.category === "Blocks"));
+			// let updateProposersSel = proposersG.selectAll(".bar")
+			// 	.data(data.filter(d => d.category === "Blocks"));
 
-			// remove items
-			updateProposersSel.exit().remove();
+			// // remove items
+			// updateProposersSel.exit().remove();
 
-			// add items
-			updateProposersSel.enter()
-				.append(d => {
-					if (debug) { console.log("d", JSON.stringify(d)); }
-					let type = "g";
-					let node = document.createElementNS("http://www.w3.org/2000/svg", type);
-					return node;
-				})
-				.attr("class", "bar")
-				.attr("id", d => `bar-${d.proposedBy}`)
-				.attr("transform", d => translateProposer(d))
-				.html(d => proposerTemplate(d));
+			// // add items
+			// updateProposersSel.enter()
+			// 	.append(d => {
+			// 		if (debug) { console.log("d", JSON.stringify(d)); }
+			// 		let type = "g";
+			// 		let node = document.createElementNS("http://www.w3.org/2000/svg", type);
+			// 		return node;
+			// 	})
+			// 	.attr("class", "bar")
+			// 	.attr("id", d => `bar-${d.proposedBy}`)
+			// 	.attr("transform", d => translateProposer(d))
+			// 	.html(d => proposerTemplate(d));
 
-			// update items; added items are now part of the update selection
-			updateProposersSel
-				.attr("transform", d => translateProposer(d))
-				.html(d => proposerTemplate(d));
+			// // update items; added items are now part of the update selection
+			// updateProposersSel
+			// 	.attr("transform", d => translateProposer(d))
+			// 	.html(d => proposerTemplate(d));
 
-			function translateProposer(d) {
-				let retValX = Math.round(x(d.time));
-				let retValY = y(d.category);
-				return `translate(${retValX},${retValY})`;
-			}
+			// function translateProposer(d) {
+			// 	let retValX = Math.round(x(d.time));
+			// 	let retValY = y(d.category);
+			// 	return `translate(${retValX},${retValY})`;
+			// }
 
-			function proposerTemplate(d) {
-				return `
-				<circle
-					cx="${getSlotWidth(d) / 2}" 
-					cy="${y(d.category) * .75 - 20}" 
-					r="${setRadius(d)}"
-					fill="${mapBlockStatusToColor(d)}"
-				></circle>
-				<text 
-					x="${offset}"
-					y="${y(d.category) * .75 - 10}"
-					font-size=".5em" 
-					fill="black"
-					opacity="1"
-					>${d.proposedBy}</text>
-				`;
-			}
+			// function proposerTemplate(d) {
+			// 	return `
+			// 	<circle
+			// 		cx="${getSlotWidth(d) / 2}" 
+			// 		cy="${y(d.category) * .75 - 20}" 
+			// 		r="${setRadius(d)}"
+			// 		fill="${mapBlockStatusToColor(d)}"
+			// 	></circle>
+			// 	<text 
+			// 		x="${offset}"
+			// 		y="${y(d.category) * .75 - 10}"
+			// 		font-size=".5em" 
+			// 		fill="black"
+			// 		opacity="1"
+			// 		>${d.proposedBy}</text>
+			// 	`;
+			// }
 
-			function setRadius(d) {
-				if (getSlotWidth(d) < 1) {
-					return .25;
-				} else {
-					return 2;
-				} 
-			}
+			// function setRadius(d) {
+			// 	if (getSlotWidth(d) < 1) {
+			// 		return .25;
+			// 	} else {
+			// 		return 2;
+			// 	} 
+			// }
 			/* 	------------------------------------------------------------------------------------
 				ATTESTATIONS
 				------------------------------------------------------------------------------------ */
@@ -679,22 +722,22 @@ function realTimeChartMulti() {
 			updateAttestationsSel.exit().remove();
 
 			// add items
-			updateAttestationsSel.enter()
-				.append(d => {
-					if (debug) { console.log("d", JSON.stringify(d)); }
-					let type = "g";
-					let node = document.createElementNS("http://www.w3.org/2000/svg", type);
-					return node;
-				})
-				.attr("class", "bar")
-				.attr("id", d => `bar-${d.attestations}`)
-				.attr("transform", d => translateAttestations(d))
-				.html(d => attestationsTemplate(d));
+			// updateAttestationsSel.enter()
+			// 	.append(d => {
+			// 		if (debug) { console.log("d", JSON.stringify(d)); }
+			// 		let type = "g";
+			// 		let node = document.createElementNS("http://www.w3.org/2000/svg", type);
+			// 		return node;
+			// 	})
+			// 	.attr("class", "bar")
+			// 	.attr("id", d => `bar-${d.attestations}`)
+			// 	.attr("transform", d => translateAttestations(d))
+			// 	.html(d => attestationsTemplate(d));
 
 			// update items; added items are now part of the update selection
-			updateAttestationsSel
-				.attr("transform", d => translateAttestations(d))
-				.html(d => attestationsTemplate(d));
+			// updateAttestationsSel
+			// 	.attr("transform", d => translateAttestations(d))
+			// 	.html(d => attestationsTemplate(d));
 
 			function translateAttestations(d) {
 				let retValX = Math.round(x(d.time));
@@ -708,17 +751,16 @@ function realTimeChartMulti() {
 				let votes = d.votes;
 				let votes_arr = [];
 				for (votes; votes > 0; votes--) {
-					console.log(votes);
 					let vote = `<rect
-						x="${offset}"
-						y="${(y(d.category) * 1.5) - (2 * h * votes) - 40 }"
+						x="${offset * 2}"
+						y="${y(d.category) - (2 * h * votes)}"
 						width=${w}
 						height=${h}
 						fill="black"
 						></rect>`;
 					votes_arr.push(vote);
 				};
-				// console.log(votes_arr.reverse());
+				// y="${(y(d.category) * 1.5) - (2 * h * votes) - 40 }"
 				return `
 				${votes_arr}
 				<text 
@@ -793,7 +835,7 @@ function realTimeChartMulti() {
 			// refresh svg
 			refresh();
 
-		}, 200)
+		}, 1000)
 
 		return chart;
 

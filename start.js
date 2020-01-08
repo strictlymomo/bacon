@@ -14,7 +14,8 @@ async function init() {
 
 	const KICKOFF = new Date(new Date().getTime());
 	const ACTIVE_VALIDATOR_SET = 1000;
- 	/* 	-----------------------------------
+	 
+	/* 	-----------------------------------
 		Dummy Prysm Data
 		----------------------------------- */
 	
@@ -27,16 +28,16 @@ async function init() {
 	let chart = realTimeChartMulti()
 		.title("Beacon Chain")
 		.xTitle("Time")
-		.yTitle("Elements")
+		// .yTitle("Elements")
 		.yDomain([
 			"_",
-			"Attestations",
+			// "Attestations",
 			"Blocks",
 			"Epochs",
 		]) // initial y domain (note array)	
 		.border(true)
 		.width(1440)
-		.height(900)
+		.height(768)
 		.backgroundColor("#FFFFFF")
 		.maxSeconds(maxSeconds)
 		.headSlotTimeOffset(SLOTS_PER_EPOCH * SLOT_INTERVAL);	// for visualizing beyond the top boundary of an epoch
@@ -137,12 +138,53 @@ async function init() {
 
 		/*	Example Block
 				
-			Epoch: 			28285
-			Slot: 			226282
+			Epoch: 			27191
+			Slot: 			271540
 			Status:			Proposed
 			Time: 			12/12/2019 9:44:26 PM (a few seconds ago)
 			Proposed by:	371
-			Votes:			[...]
+			Votes:			[
+								{
+									...
+									data: {
+										slot: "217538",
+										beaconBlockRoot: "T61j0FpyjexOfeClkmtQh8ZsiFCAQMlpKPpUkg2DMCc=",
+										source: {
+											epoch: "27191",
+											root: "3uYV3BCjy+uVFTSrwN57Ew9i2DOeplhE5tbjYV4leTg="
+										},
+										target: {
+											epoch: "27192",
+											root: "+LWF76f3c8PF1xaMV/Zh9r1Q19Od/huAX3L6w7R07aY="
+										}
+										...
+									},
+									...
+								},
+								{
+									...
+									data: {
+										slot: "217538",
+										...
+									}	
+									...
+								},
+								{
+									...
+									data: {
+										slot: "217539",
+										...
+									},
+									...
+								},
+								{
+									...
+									data: {
+										slot: "217539",
+									},
+									...
+								},
+                    		],
 		*/
 
 		let block = {
