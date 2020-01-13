@@ -30,9 +30,9 @@ async function init() {
 		----------------------------------- */
 
 	let chart = realTimeChartMulti()
-		// .title("Beacon Chain")
+		.title("Beacon Chain")
 		.xTitle("Time")
-		.yTitle("Elements")
+		// .yTitle("Elements")
 		.yDomain([
 			"_",
 			// "Attestations",
@@ -61,6 +61,12 @@ async function init() {
 	d3.select("#halt").on("change", function () {
 		let state = d3.select(this).property("checked")
 		chart.halt(state);
+	});
+
+	// event handler for show roots checkbox
+	d3.select("#show-roots").on("change", function () {
+		let state = d3.select(this).property("checked")
+		chart.showRoots(state);
 	});
 
 	// halt via spacebar

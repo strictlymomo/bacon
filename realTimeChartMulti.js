@@ -23,7 +23,8 @@ function realTimeChartMulti() {
 		svg,
 		backgroundColor,
 		offset,
-		headSlotTimeOffset;
+		headSlotTimeOffset,
+		showRoots = false;
 
 	/* 	------------------------------------------------------------------------------------
 		create the chart
@@ -122,16 +123,16 @@ function realTimeChartMulti() {
 			});
 
 		// in y axis group, add y axis title
-		// yAxisG.append("text")
-		// 	.attr("class", "title")
-		// 	.attr("transform", "rotate(-90)")
-		// 	.attr("x", - height / 2)
-		// 	.attr("y", -margin.left + 15) //-35
-		// 	.attr("dy", ".71em")
-		// 	.text(() => {
-		// 		let text = yTitle == undefined ? "" : yTitle;
-		// 		return text;
-		// 	});
+		yAxisG.append("text")
+			.attr("class", "title")
+			.attr("transform", "rotate(-90)")
+			.attr("x", - height / 2)
+			.attr("y", -margin.left + 15) //-35
+			.attr("dy", ".71em")
+			.text(() => {
+				let text = yTitle == undefined ? "" : yTitle;
+				return text;
+			});
 
 		// in main group, add chart title
 		main.append("text")
@@ -244,7 +245,7 @@ function realTimeChartMulti() {
 			.attr("orient", "auto")
 			.append("path")
 			.attr("d", "M 0 0 6 3 0 6 1.5 3")
-			.style("fill", "#555");
+			.style("fill", "#FFF");
 
 		svg.append("svg:defs").append("svg:marker")
 			.attr("id", "orphaned-triangle")
@@ -378,11 +379,11 @@ function realTimeChartMulti() {
 			*/
 
 			let epochsData = data.filter(d => d.category === "Epochs");
-			
+
 			// update epoch status
 			for (let epoch in epochsData) {
 				epochsData[epoch].status = checkEpochStatus(epochsData[epoch].time);
-			}	
+			}
 
 			let updateEpochsSel = epochsG.selectAll(".bar")
 				.data(epochsData);
@@ -571,10 +572,10 @@ function realTimeChartMulti() {
 				return t2 - t1;
 			}
 
-			function roundedCorner(d)  {
-				if (getSlotWidth(d) > 20 ) {
+			function roundedCorner(d) {
+				if (getSlotWidth(d) > 20) {
 					return 4;
-				} 
+				}
 				return 0;
 			}
 
@@ -600,73 +601,81 @@ function realTimeChartMulti() {
 				ROOTS
 				------------------------------------------------------------------------------------ */
 
-			let updateRootsSel = rootsG.selectAll(".bar")
-				.data(data.filter(d => d.category === "Blocks"));
+			if (!showRoots) {
+				d3.selectAll(".roots").remove();
+			}
 
-			// remove items
-			updateRootsSel.exit().remove();
+			if (showRoots) {
+				let updateRootsSel = rootsG.selectAll(".roots")
+					.data(data.filter(d => d.category === "Blocks"));
 
-			// add items
-			// updateRootsSel.enter()
-			// 	.append("path")
-			// 	.attr("class", "bar")
-			// 	.attr("id", d => `bar-root-${d.slot}`); //TODO: block root
+				// remove items
+				updateRootsSel.exit().remove();
 
-			// update items; added items are now part of the update selection
-			// updateRootsSel
-			// 	.attr("d", (d, i) => {
-			// 		const x0 = Math.round(x(d.time)) + (slotWidth / 2),
-			// 			y0 = y(d.category) + (y(d.category) / 4),
-			// 			x1 = getPreviousRootPosition(updateRootsSel, i) + (slotWidth * (3/4)),
-			// 			y1 = y0,
-			// 			cpx = x1 + ((x0 - x1) * .5),
-			// 			cpy = y(d.category) + (3 * y(d.category) / 8) + offset + 1,
-			// 			path = d3.path();
-			// 		path.moveTo(x0, y0);
-			// 		path.quadraticCurveTo(cpx, cpy, x1, y1);
-			// 		return path;
-			// 	})
-			// 	.attr("stroke", d => {
-			// 		switch (d.status) {
-			// 			case "proposed":
-			// 				return "white";
-			// 			case "orphaned":
-			// 				return "#ccc"
-			// 			default:
-			// 				return "none"
-			// 		}
-			// 	})
-			// 	.attr("fill", "transparent")
-			// 	.attr("marker-end", d => {
-			// 		switch (d.status) {
-			// 			case "proposed":
-			// 				return "url(#proposed-triangle)";
-			// 			case "orphaned":
-			// 				return "url(#orphaned-triangle)"
-			// 			default:
-			// 				return ""
-			// 		}
-			// 	});
+				// add items
+				updateRootsSel.enter()
+					.append("path")
+					.attr("class", "roots")
+					.attr("id", d => `bar-root-${d.slot}`); //TODO: block root
 
-			// TODO: calling this function kills memory. store the root hashes or rely on the API
-			function getPreviousRootPosition(selection, i) {
-				let prevBlock = selection.data()[i - 1];
-				let prevBlockIndex = i - 1;
-				let parentIndex = 0;
+				// update items; added items are now part of the update selection
+				updateRootsSel
+					.attr("d", (d, i) => {
+						// y0 = y(d.category) + (y(d.category) / 4),
+						// cpy = y(d.category) + (3 * y(d.category) / 8) + offset + 1,
+						const x0 = Math.round(x(d.time)) + (slotWidth / 2),
+							y0 = y(d.category) * 1.75,
+							x1 = getPreviousRootPosition(updateRootsSel, i) + (slotWidth * (3/4)),
+							y1 = y0,
+							cpx = x1 + ((x0 - x1) * .5),
+							cpy = y(d.category) * 1.75 + (1 * y(d.category) / 8) + offset + 1,
+							path = d3.path();
+						path.moveTo(x0, y0);
+						path.quadraticCurveTo(cpx, cpy, x1, y1);
+						return path;
+					})
+					.attr("stroke", d => {
+						switch (d.status) {
+							case "proposed":
+								return "white";
+							case "orphaned":
+								return "#ccc"
+							default:
+								return "none"
+						}
+					})
+					.attr("fill", "transparent")
+					.attr("marker-end", d => {
+						switch (d.status) {
+							case "proposed":
+								return "url(#proposed-triangle)";
+							case "orphaned":
+								return "url(#orphaned-triangle)"
+							default:
+								return ""
+						}
+					});
 
-				// there is a block
-				if (prevBlock) {
-					// ... and it is the parent block
-					if (prevBlock.status === "proposed") {
-						parentIndex = Math.round(x(prevBlock.time));
+				// TODO: calling this function kills memory. store the root hashes or rely on the API
+				function getPreviousRootPosition(selection, i) {
+					let prevBlock = selection.data()[i - 1];
+					let prevBlockIndex = i - 1;
+					let parentIndex = 0;
+
+					// there is a block
+					if (prevBlock) {
+						// ... and it is the parent block
+						if (prevBlock.status === "proposed") {
+							parentIndex = Math.round(x(prevBlock.time));
+							return parentIndex;
+						}
+						// ... and it is a missing or orphaned block. let's recursively find parent...
+						parentIndex = getPreviousRootPosition(selection, prevBlockIndex);
 						return parentIndex;
 					}
-					// ... and it is a missing or orphaned block. let's recursively find parent...
-					parentIndex = getPreviousRootPosition(selection, prevBlockIndex);
+					// no block
 					return parentIndex;
 				}
-				// no block
-				return parentIndex;
 			}
 
 			/* 	------------------------------------------------------------------------------------
@@ -961,6 +970,13 @@ function realTimeChartMulti() {
 	chart.halt = function (_) {
 		if (arguments.length == 0) return halted;
 		halted = _;
+		return chart;
+	}
+
+	// show roots
+	chart.showRoots = function (_) {
+		if (arguments.length == 0) return showRoots;
+		showRoots = _;
 		return chart;
 	}
 
