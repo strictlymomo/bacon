@@ -1,24 +1,28 @@
 'use strict';
 
+/* 	-----------------------------------
+	Globals
+	----------------------------------- */
+const EPOCHS_AGO = 12;
+const SLOTS_PER_EPOCH = 32;
+const SECONDS_PER_SLOT = 12;
+const SLOT_INTERVAL = SECONDS_PER_SLOT * 1000;
+let maxSeconds = (EPOCHS_AGO * SLOTS_PER_EPOCH * SECONDS_PER_SLOT) + (1 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT);
+const ACTIVE_VALIDATOR_SET = 1000;
+
+
 async function init() {
 
 	/* 	-----------------------------------
 		Beacon Chain Config
 		----------------------------------- */
 
-	const EPOCHS_AGO = 3;
-	const SLOTS_PER_EPOCH = 32;
-	const SECONDS_PER_SLOT = 12;
-	const SLOT_INTERVAL = SECONDS_PER_SLOT * 1000;
-	let maxSeconds = (EPOCHS_AGO * SLOTS_PER_EPOCH * SECONDS_PER_SLOT) + (1 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT);
-
 	const KICKOFF = new Date(new Date().getTime());
-	const ACTIVE_VALIDATOR_SET = 1000;
-	 
+
 	/* 	-----------------------------------
 		Dummy Prysm Data
 		----------------------------------- */
-	
+
 	let sampleBlock = await getSampleBlock(217540);
 
 	/* 	-----------------------------------
@@ -26,19 +30,19 @@ async function init() {
 		----------------------------------- */
 
 	let chart = realTimeChartMulti()
-		.title("Beacon Chain")
+		// .title("Beacon Chain")
 		.xTitle("Time")
-		// .yTitle("Elements")
+		.yTitle("Elements")
 		.yDomain([
 			"_",
 			// "Attestations",
 			"Blocks",
 			"Epochs",
 		]) // initial y domain (note array)	
-		.border(true)
+		.border(false)
 		.width(1440)
 		.height(768)
-		.backgroundColor("#FFFFFF")
+		.backgroundColor("transparent")
 		.maxSeconds(maxSeconds)
 		.headSlotTimeOffset(SLOTS_PER_EPOCH * SLOT_INTERVAL);	// for visualizing beyond the top boundary of an epoch
 
@@ -58,6 +62,11 @@ async function init() {
 		let state = d3.select(this).property("checked")
 		chart.halt(state);
 	});
+
+	// halt via spacebar
+	document.body.onkeyup = function (e) {
+		pause(e);
+	}
 
 	/* 	-----------------------------------
 		Configure the data generator
@@ -81,10 +90,10 @@ async function init() {
 
 	function generatePrevData(d) {
 		for (d; d <= -1; d++) {
-			const SECONDS_AGO = Math.abs(d) * SLOT_INTERVAL;
-			const TIMESTAMP = new Date(KICKOFF.getTime() - SECONDS_AGO);
-			generateEpoch(d, TIMESTAMP, true);
-			generateBlock(d, TIMESTAMP);
+			const msAgo = Math.abs(d) * SLOT_INTERVAL;
+			const timestamp = new Date(KICKOFF.getTime() - msAgo);
+			generateEpochPrev(d, timestamp, msAgo);
+			generateBlock(d, timestamp);
 		}
 	}
 
@@ -100,7 +109,7 @@ async function init() {
 			// drive data into the chart at designated slot interval
 			timeout = SLOT_INTERVAL;
 
-			generateEpoch(d, now, false);
+			generateEpoch(d, now);
 			generateBlock(d, now);
 
 			// TODO: circle packing ATTESTATIONS
@@ -111,13 +120,26 @@ async function init() {
 		}, timeout);
 	}
 
-	function generateEpoch(d, timestamp, status) {
+	function generateEpochPrev(d, timestamp, timeElapsed) {
 		if (Math.abs(d) % SLOTS_PER_EPOCH === 0) {
 			let epoch = {
 				category: "Epochs",
 				time: timestamp,
 				label: (Math.round(d / SLOTS_PER_EPOCH)).toString(),
-				finalized: status
+				status: checkEpochStatusPrev(timeElapsed)
+			};
+			chart.datum(epoch);
+		}
+	}
+
+	function generateEpoch(d, timestamp) {
+
+		if (Math.abs(d) % SLOTS_PER_EPOCH === 0) {
+			let epoch = {
+				category: "Epochs",
+				time: timestamp,
+				label: (Math.round(d / SLOTS_PER_EPOCH)).toString(),
+				status: "pending"
 			};
 			chart.datum(epoch);
 		}
@@ -194,7 +216,7 @@ async function init() {
 			slot: d.toString(),
 			time: timestamp,
 			status: status,
-			proposedBy: generateRandomValidator(ACTIVE_VALIDATOR_SET),			
+			proposedBy: generateRandomValidator(ACTIVE_VALIDATOR_SET),
 			votes: generateRandomAttestations(status, ACTIVE_VALIDATOR_SET),
 		};
 
@@ -208,7 +230,7 @@ async function init() {
 	}
 
 	function generateRandomValidator(activeValidatorSet) {
-		return Math.round(Math.random(0,1) * activeValidatorSet);
+		return Math.round(Math.random(0, 1) * activeValidatorSet);
 	}
 
 	function generateRandomAttestations(status, activeValidatorSet) {
@@ -224,6 +246,66 @@ async function init() {
 		}
 	}
 
+	function pause(e) {
+		if (e.keyCode == 32) {
+			let state = d3.select("#halt").property("checked");
+			if (state === false) {
+				d3.select("#halt").property("checked", true);
+				state = true;
+			} else {
+				d3.select("#halt").property("checked", false);
+				state = false;
+			}
+			chart.halt(state);
+		}
+	}
+
 } // end init function
 
 init();
+
+/* 	-----------------------------------
+	Global Methods
+	----------------------------------- */
+
+function checkEpochStatusPrev(timeElapsed) {
+	let status;
+
+	// current epoch or 1 epoch ago
+	if (timeElapsed <= SECONDS_PER_SLOT * SLOTS_PER_EPOCH * 1000 * 2) {
+		status = "pending";
+	}
+	// 2 epochs ago
+	else if (timeElapsed <= SECONDS_PER_SLOT * SLOTS_PER_EPOCH * 3 * 1000 &&
+		timeElapsed >= SECONDS_PER_SLOT * SLOTS_PER_EPOCH * 2 * 1000) {
+		status = "justified";
+	}
+	// 3+ epochs ago 
+	else {
+		status = "finalized";
+	}
+
+	return status;
+}
+
+function checkEpochStatus(time) {
+	const timeElapsed = new Date().getTime() - time.getTime();
+
+	let status;
+
+	// current epoch or 1 epoch ago
+	if (timeElapsed <= SECONDS_PER_SLOT * SLOTS_PER_EPOCH * 1000 * 2) {
+		status = "pending";
+	}
+	// 2 epochs ago
+	else if (timeElapsed <= SECONDS_PER_SLOT * SLOTS_PER_EPOCH * 3 * 1000 &&
+		timeElapsed >= SECONDS_PER_SLOT * SLOTS_PER_EPOCH * 2 * 1000) {
+		status = "justified";
+	}
+	// 3+ epochs ago 
+	else {
+		status = "finalized";
+	}
+
+	return status;
+}

@@ -40,7 +40,7 @@ function realTimeChartMulti() {
 		chartTitle = chartTitle || "";
 		xTitle = xTitle || "";
 		yTitle = yTitle || "";
-		backgroundColor = backgroundColor || "#f5f5f5";
+		backgroundColor = backgroundColor || "#0f1927";
 
 		// process time
 		maxSeconds = maxSeconds || 300;
@@ -68,7 +68,7 @@ function realTimeChartMulti() {
 			.attr("width", svgWidth)
 			.attr("height", svgHeight)
 			.style("border", () => {
-				if (border) return "1px solid lightgray";
+				if (border) return "1px solid #e2e8f0";
 				else return null;
 			});
 
@@ -107,8 +107,8 @@ function realTimeChartMulti() {
 			.attr("transform", "translate(0," + height + ")");
 
 		// add group for y axis
-		// yAxisG = main.append("g")
-		// 	.attr("class", "y axis");
+		yAxisG = main.append("g")
+			.attr("class", "y axis");
 
 		// in x axis group, add x axis title
 		xAxisG.append("text")
@@ -170,7 +170,7 @@ function realTimeChartMulti() {
 			.attr("y", 0)
 			.attr("width", width)
 			.attr("height", heightNav)
-			.style("fill", "#F5F5F5")
+			.style("fill", "#0f1927")
 			.style("shape-rendering", "crispEdges")
 			.attr("transform", "translate(0, 0)");
 
@@ -377,8 +377,15 @@ function realTimeChartMulti() {
 			exited
 			*/
 
+			let epochsData = data.filter(d => d.category === "Epochs");
+			
+			// update epoch status
+			for (let epoch in epochsData) {
+				epochsData[epoch].status = checkEpochStatus(epochsData[epoch].time);
+			}	
+
 			let updateEpochsSel = epochsG.selectAll(".bar")
-				.data(data.filter(d => d.category === "Epochs"));
+				.data(epochsData);
 
 			// remove items
 			updateEpochsSel.exit().remove();
@@ -401,8 +408,32 @@ function realTimeChartMulti() {
 				return `translate(${retValX},${retValY})`;
 			}
 
-			function justificationAnimationTemplate(finalized) {
-				if (!finalized) {
+			function epochTemplate(d) {
+				return `
+					<line
+						x1="0" 
+						x2="0" 
+						y1="${-y(d.category)}"
+						y2="${svgHeight}"
+						stroke="white"
+						stroke-opacity=".37"
+					>
+					${justificationAnimationTemplate(d.status)}
+					</line>
+					<text 
+						x="${offset}" 
+						y="${-(y(d.category)) + 8}" 
+						font-size=".71em" 
+						fill="white"
+					>EPOCH ${d.label}
+						<tspan x="${offset}" dy="1.2em">${(d.status).toUpperCase()}</tspan>
+					${justificationAnimationTemplate(d.status)}
+					</text>
+				`;
+			}
+
+			function justificationAnimationTemplate(status) {
+				if ("pending" || "justified") {
 					return `<animate id="animation1"
 					attributeName="opacity"
 					from="0" to="1" dur="3s"
@@ -413,30 +444,6 @@ function realTimeChartMulti() {
 					begin="animation1.end" />`;
 				}
 				return "";
-			}
-
-			function epochTemplate(d) {
-				return `
-					<line
-						x1="0" 
-						x2="0" 
-						y1="${-y(d.category)}"
-						y2="${svgHeight}"
-						stroke="black"
-						stroke-opacity=".37"
-					>
-					${justificationAnimationTemplate(d.finalized)}	
-					</line>
-					<text 
-						x="${offset}" 
-						y="${-(y(d.category)) + 8}" 
-						font-size=".71em" 
-						fill="black"
-					>EPOCH ${d.label}
-						<tspan x="${offset}" dy="1.2em">${d.finalized ? "FINALIZED" : "PENDING"}</tspan>
-					${justificationAnimationTemplate(d.finalized)}
-					</text>
-				`;
 			}
 
 			/* 	------------------------------------------------------------------------------------
@@ -494,22 +501,24 @@ function realTimeChartMulti() {
 							x2="0" 
 							y1="${-(y(d.category))}"
 							y2="${y(d.category) * 3}"
-							stroke="${(d.color || "black")}"
+							stroke="white"
 							stroke-opacity=".07"
 						></line>`
 				}
 
-				if (getSlotWidth(d) > 175) {
+				if (getSlotWidth(d) > 14) {
 					text = `
 						<text 
 							x="${offset}"
 							y="${-(y(d.category) / 4) - 6}"
-							font-size=".71em" 
+							font-size=".5em" 
 							fill="black"
 							opacity=".37"
 							${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
 						>${d.slot}</text>`
+				}
 
+				if (getSlotWidth(d) > 175) {
 					const w = 2;
 					const h = 2;
 					let votes = d.votes;
@@ -546,8 +555,9 @@ function realTimeChartMulti() {
 					y="${-(y(d.category) / 4)}" 
 					width="${getSlotWidth(d)}"
 					height="${y(d.category)}"
+					rx="${roundedCorner(d)}" 
+					ry="${roundedCorner(d)}"
 					fill="${mapBlockStatusToColor(d)}"
-					opacity=".15"
 					stroke="none"
 				></rect>
 				${image}
@@ -561,17 +571,24 @@ function realTimeChartMulti() {
 				return t2 - t1;
 			}
 
+			function roundedCorner(d)  {
+				if (getSlotWidth(d) > 20 ) {
+					return 4;
+				} 
+				return 0;
+			}
+
 			function mapBlockStatusToColor(d) {
 				let retVal = "none";
 				switch (d.status) {
 					case "proposed":
-						retVal = "#28a745";
+						retVal = "#36958d";
 						break;
 					case "orphaned":
-						retVal = "#aaa";
+						retVal = "#efc865";
 						break;
 					case "missing":
-						retVal = "white"
+						retVal = "transparent"
 						break;
 					default:
 				}
@@ -590,10 +607,10 @@ function realTimeChartMulti() {
 			updateRootsSel.exit().remove();
 
 			// add items
-			updateRootsSel.enter()
-				.append("path")
-				.attr("class", "bar")
-				.attr("id", d => `bar-root-${d.slot}`); //TODO: block root
+			// updateRootsSel.enter()
+			// 	.append("path")
+			// 	.attr("class", "bar")
+			// 	.attr("id", d => `bar-root-${d.slot}`); //TODO: block root
 
 			// update items; added items are now part of the update selection
 			// updateRootsSel
@@ -612,7 +629,7 @@ function realTimeChartMulti() {
 			// 	.attr("stroke", d => {
 			// 		switch (d.status) {
 			// 			case "proposed":
-			// 				return "#555";
+			// 				return "white";
 			// 			case "orphaned":
 			// 				return "#ccc"
 			// 			default:

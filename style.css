@@ -1,28 +1,53 @@
+@import url('https://fonts.googleapis.com/css?family=Barlow&display=swap');
+
+html {
+    font-family: "Barlow", Arial, Helvetica, sans-serif;
+    color: white;
+}
+
+body {
+    color: white;
+    background-color: #0f1927;
+}
+
+.layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 1440px;
+    height: 100vh;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .axis text {
-    font: 10px sans-serif;
+    font-size: 10px;
+    fill: white;
 }
 
 .chartTitle {
     font-size: 12px;
     font-weight: bold;
     text-anchor: middle;
+    fill: white;
 }
 
 .axis .title {
     font-weight: bold;
     text-anchor: middle;
     fill: black;
+    fill: white;
 }
 
 .axis path, .axis line {
     fill: none;
-    stroke: #000;
+    stroke: white;;
     shape-rendering: crispEdges;
 }
 
 .x.axis path {
     fill: none;
-    stroke: #000;
+    stroke: white;
     shape-rendering: crispEdges;
 }
 
@@ -38,27 +63,29 @@
 }
 
 .viewport {
-    stroke: grey;
-    fill: black;
-    fill-opacity: 0.3;
+    stroke: #586a82;
+    fill: white;
+    fill-opacity: 0.1;
 }
 
 .viewport .extent,
 .viewport .selection {
-    fill: green;
+    fill: white;
+    fill-opacity: 0.2;
 }
 
 .viewport .overlay {
-    fill: rgba(255,0,0,.1);
+    fill: rgba(0,0,0,.05);
     stroke: none;
 }
 
-.layout {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    max-width: 1440px;
-    height: 100vh;
-    margin-left: auto;
-    margin-right: auto;
+.viewport .selection {
+    fill: rgba(53,110,255,.37);
+}
+
+.viewport .handle--w,
+.viewport .handle--e {
+    stroke: none;
+    fill: white;
+    fill-opacity: .75;
 }
