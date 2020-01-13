@@ -3,7 +3,7 @@
 /* 	-----------------------------------
 	Globals
 	----------------------------------- */
-const EPOCHS_AGO = 12;
+const EPOCHS_AGO = 8;
 const SLOTS_PER_EPOCH = 32;
 const SECONDS_PER_SLOT = 12;
 const SLOT_INTERVAL = SECONDS_PER_SLOT * 1000;

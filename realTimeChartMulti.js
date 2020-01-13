@@ -511,14 +511,14 @@ function realTimeChartMulti() {
 						></line>`
 				}
 
-				if (getSlotWidth(d) > 14) {
+				if (getSlotWidth(d) > 25) {
 					text = `
 						<text 
 							x="${offset}"
 							y="${-(y(d.category) / 4) - 6}"
-							font-size=".5em" 
-							fill="black"
-							opacity=".37"
+							font-size=".75em" 
+							fill="white"
+							opacity=".73"
 							${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
 						>${d.slot}</text>`
 				}
@@ -533,7 +533,7 @@ function realTimeChartMulti() {
 							y="${((y(d.category) / 4)) - (2 * h * votes)}"
 							width=${w}
 							height=${h}
-							fill="black"
+							fill="white"
 							></rect>`;
 						votes_arr.push(vote);
 					};
