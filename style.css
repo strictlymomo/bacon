@@ -10,6 +10,11 @@ body {
     background-color: #0f1927;
 }
 
+svg {
+    font-family: "Barlow", Arial, Helvetica, sans-serif;
+    color: white;
+}
+
 .layout {
     display: flex;
     align-items: center;

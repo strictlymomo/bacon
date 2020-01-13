@@ -258,6 +258,11 @@ function realTimeChartMulti() {
 			.append("path")
 			.attr("d", "M 0 0 6 3 0 6 1.5 3")
 			.style("fill", "#ccc");
+			
+		svg.append('defs')
+            .append('style')
+            .attr('type', 'text/css')
+            .text("@import url('https://fonts.googleapis.com/css?family=Barlow:400,300,600,700,800);");
 
 		/* 	----------------------------------------
 			scales
@@ -490,8 +495,7 @@ function realTimeChartMulti() {
 			function blockTemplate(d) {
 				let text = ``;
 				let line = ``;
-				let image = ``;
-				let missingText = ``;
+				let content = ``;
 				let votes_arr = [];
 
 				if (getSlotWidth(d) > 10) {
@@ -519,7 +523,7 @@ function realTimeChartMulti() {
 						>${d.slot}</text>`
 				}
 
-				if (getSlotWidth(d) > 175) {
+				if (getSlotWidth(d) > 100) {
 					const w = 2;
 					const h = 2;
 					let votes = d.votes;
@@ -535,14 +539,33 @@ function realTimeChartMulti() {
 					};
 
 					if (d.status === "missing") {
-						image = `<image x="${offset}" y="${((y(d.category) / 4))}" width="140" height="100" xlink:href="https://thebridgebk.com/wp-content/uploads/2017/12/LUBIN-e1513902249991.jpg" opacity=".15"/>
+						content = `
+						<text 
+							x="${getSlotWidth(d) / 2}"
+							y="${((y(d.category) / 4))}"
+							font-size="1.5em" 
+							text-anchor="middle"
+							dominant-baseline="middle"
+							fill="white"
+							opacity=".37"
+						>Missed</text>`;
+					}
+
+					if (d.status === "proposed") {
+						content = `
 						<text 
 							x="${offset}"
-							y="${-(y(d.category) / 4) + 100}"
-							font-size=".71em" 
-							fill="black"
-							opacity=".37"
-						>Someone lost money</text>`;
+							y="0"
+							font-size="1em" 
+							fill="white"
+							opacity="1"
+							dy="0"
+							>
+							<tspan x="${offset}" dy="2.4em">0x.......${d.slot}</tspan>
+							<tspan x="${offset}" dy="1.2em">Proposed by:		${d.proposedBy}</tspan>
+							<tspan x="${offset}" dy="1.2em">Attestations:		${d.votes}</tspan>
+						</text>
+						`;
 					}
 
 				}
@@ -561,8 +584,8 @@ function realTimeChartMulti() {
 					fill="${mapBlockStatusToColor(d)}"
 					stroke="none"
 				></rect>
-				${image}
-				${votes_arr}
+				${content}
+				${/* TODO: ${votes_arr} */""}
 				`;
 			}
 
@@ -813,7 +836,7 @@ function realTimeChartMulti() {
 			// add items
 			updateBlocksSelNav.enter().append("circle")
 				.attr("r", 1)
-				.attr("fill", "black")
+				.attr("fill", "white")
 
 			// added items now part of update selection; set coordinates of points
 			updateBlocksSelNav
