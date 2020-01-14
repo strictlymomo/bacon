@@ -432,11 +432,11 @@ function realTimeChartMulti() {
 				.append("g")
 				.attr("class", "bar")
 				.attr("id", d => `bar-${d.label}`)
-				.attr("transform", d => translateDataGroup(d))
+				.attr("transform", d => translateEpoch(d))
 				.html(d => epochTemplate(d));
 
 			updateEpochsSel
-				.attr("transform", d => translateDataGroup(d))
+				.attr("transform", d => translateEpoch(d))
 				.html(d => epochTemplate(d));
 
 			/* 	------------------------------------------------------------------------------------
@@ -661,14 +661,20 @@ function realTimeChartMulti() {
 		/* 	--------------------------------------
 			EPOCH
 			-------------------------------------- */
+		
+		function translateEpoch(d) {
+			let retValX = Math.round(x(d.time));
+			let retValY = 0;
+			return `translate(${retValX},${retValY})`;
+		}
 
 		function epochTemplate(d) {
 			return `
 				<line
 					x1="0" 
 					x2="0" 
-					y1="${-y(d.category)}"
-					y2="${svgHeight}"
+					y1="${0}"
+					y2="${height}"
 					stroke="white"
 					stroke-opacity=".37"
 				>
@@ -676,7 +682,7 @@ function realTimeChartMulti() {
 				</line>
 				<text 
 					x="${offset}" 
-					y="${-(y(d.category)) + 8}" 
+					y="${8}" 
 					font-size=".71em" 
 					fill="white"
 				>EPOCH ${d.label}
