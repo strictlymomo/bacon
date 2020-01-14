@@ -25,7 +25,8 @@ function realTimeChartMulti() {
 		offset,
 		headSlotTimeOffset,
 		showRoots = false,
-		showProposers = false;
+		showProposers = false,
+		showAttestations = false;
 
 	/* 	------------------------------------------------------------------------------------
 		create the chart
@@ -568,30 +569,35 @@ function realTimeChartMulti() {
 				ATTESTATIONS
 				------------------------------------------------------------------------------------ */
 
-			// let updateAttestationsSel = attestationsG.selectAll(".bar")
-			// 	.data(data.filter(d => d.category === "Blocks"));
+			if (!showAttestations) {
+				d3.selectAll(".attestations").remove();
+			}
 
-			// remove items
-			// updateAttestationsSel.exit().remove();
+			if (showAttestations) {
+				let updateAttestationsSel = attestationsG.selectAll(".attestations")
+					.data(data.filter(d => d.category === "Blocks"));
 
-			// add items
-			// updateAttestationsSel.enter()
-			// 	.append(d => {
-			// 		if (debug) { console.log("d", JSON.stringify(d)); }
-			// 		let type = "g";
-			// 		let node = document.createElementNS("http://www.w3.org/2000/svg", type);
-			// 		return node;
-			// 	})
-			// 	.attr("class", "bar")
-			// 	.attr("id", d => `bar-${d.attestations}`)
-			// 	.attr("transform", d => translateDataGroup(d))
-			// 	.html(d => attestationsTemplate(d));
+				// remove items
+				updateAttestationsSel.exit().remove();
 
-			// update items; added items are now part of the update selection
-			// updateAttestationsSel
-			// 	.attr("transform", d => translateDataGroup(d))
-			// 	.html(d => attestationsTemplate(d));
+				// add items
+				updateAttestationsSel.enter()
+					.append(d => {
+						if (debug) { console.log("d", JSON.stringify(d)); }
+						let type = "g";
+						let node = document.createElementNS("http://www.w3.org/2000/svg", type);
+						return node;
+					})
+					.attr("class", "attestations")
+					.attr("id", d => `attestations-${d.attestations}`)
+					.attr("transform", d => translateDataGroup(d))
+					.html(d => attestationsTemplate(d));
 
+				// update items; added items are now part of the update selection
+				updateAttestationsSel
+					.attr("transform", d => translateDataGroup(d))
+					.html(d => attestationsTemplate(d));
+			}
 			/* 	------------------------------------------------------------------------------------
 				nav update
 				------------------------------------------------------------------------------------ */
@@ -661,7 +667,7 @@ function realTimeChartMulti() {
 		/* 	--------------------------------------
 			EPOCH
 			-------------------------------------- */
-		
+
 		function translateEpoch(d) {
 			let retValX = Math.round(x(d.time));
 			let retValY = 0;
@@ -907,7 +913,7 @@ function realTimeChartMulti() {
 					y="${y(d.category) - (2 * h * votes)}"
 					width=${w}
 					height=${h}
-					fill="black"
+					fill="white"
 					></rect>`;
 				votes_arr.push(vote);
 			};
@@ -917,7 +923,7 @@ function realTimeChartMulti() {
 				x="${offset}"
 				y="${y(d.category) * 1.5 - 10}"
 				font-size=".5em" 
-				fill="black"
+				fill="white"
 				opacity="1"
 				>${d.votes}</text>
 			`;
@@ -1080,6 +1086,13 @@ function realTimeChartMulti() {
 	chart.showProposers = function (_) {
 		if (arguments.length == 0) return showProposers;
 		showProposers = _;
+		return chart;
+	}
+
+	// show proposers
+	chart.showAttestations = function (_) {
+		if (arguments.length == 0) return showAttestations;
+		showAttestations = _;
 		return chart;
 	}
 

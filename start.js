@@ -1,7 +1,7 @@
 'use strict';
 
 /* 	-----------------------------------
-	Globals
+	Globals - Beacon Chain Config
 	----------------------------------- */
 const EPOCHS_AGO = 8;
 const SLOTS_PER_EPOCH = 32;
@@ -10,14 +10,7 @@ const SLOT_INTERVAL = SECONDS_PER_SLOT * 1000;
 let maxSeconds = (EPOCHS_AGO * SLOTS_PER_EPOCH * SECONDS_PER_SLOT) + (1 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT);
 const ACTIVE_VALIDATOR_SET = 1000;
 
-
 async function init() {
-
-	/* 	-----------------------------------
-		Beacon Chain Config
-		----------------------------------- */
-
-	const KICKOFF = new Date(new Date().getTime());
 
 	/* 	-----------------------------------
 		Dummy Prysm Data
@@ -28,6 +21,8 @@ async function init() {
 	/* 	-----------------------------------
 		create the real time chart
 		----------------------------------- */
+
+	const KICKOFF = new Date(new Date().getTime());
 
 	let chart = realTimeChartMulti()
 		.title("Beacon Chain")
@@ -51,34 +46,37 @@ async function init() {
 		.attr("id", "chartDiv")
 		.call(chart);
 
-	// event handler for debug checkbox
+	/* 	-----------------------------------
+		Event Handlers
+		----------------------------------- */
 	d3.select("#debug").on("change", function () {
 		let state = d3.select(this).property("checked")
 		chart.debug(state);
 	});
 
-	// event handler for halt checkbox
 	d3.select("#halt").on("change", function () {
 		let state = d3.select(this).property("checked")
 		chart.halt(state);
 	});
 
-	// event handler for show roots checkbox
+	document.body.onkeyup = function (e) {
+		pause(e);
+	}
+
 	d3.select("#show-roots").on("change", function () {
 		let state = d3.select(this).property("checked")
 		chart.showRoots(state);
 	});
 
-	// event handler for show propoers checkbox
 	d3.select("#show-proposers").on("change", function () {
 		let state = d3.select(this).property("checked")
 		chart.showProposers(state);
 	});
 
-	// halt via spacebar
-	document.body.onkeyup = function (e) {
-		pause(e);
-	}
+	d3.select("#show-attestations").on("change", function () {
+		let state = d3.select(this).property("checked")
+		chart.showAttestations(state);
+	});
 
 	/* 	-----------------------------------
 		Configure the data generator
@@ -123,8 +121,6 @@ async function init() {
 
 			generateEpoch(d, now);
 			generateBlock(d, now);
-
-			// TODO: circle packing ATTESTATIONS
 
 			// do forever
 			generateData();
