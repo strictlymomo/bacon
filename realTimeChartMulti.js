@@ -24,7 +24,8 @@ function realTimeChartMulti() {
 		backgroundColor,
 		offset,
 		headSlotTimeOffset,
-		showRoots = false;
+		showRoots = false,
+		showProposers = false;
 
 	/* 	------------------------------------------------------------------------------------
 		create the chart
@@ -606,10 +607,10 @@ function realTimeChartMulti() {
 				let retVal = "none";
 				switch (d.status) {
 					case "proposed":
-						retVal = "#36958d";
+						retVal = "rgb(54, 149, 141)";
 						break;
 					case "orphaned":
-						retVal = "#efc865";
+						retVal = "rgba(54, 149, 141, .67)";
 						break;
 					case "missing":
 						retVal = "transparent"
@@ -705,61 +706,69 @@ function realTimeChartMulti() {
 				PROPOSERS
 				------------------------------------------------------------------------------------ */
 
-			// let updateProposersSel = proposersG.selectAll(".bar")
-			// 	.data(data.filter(d => d.category === "Blocks"));
+			if (!showProposers) {
+				d3.selectAll(".proposers").remove();
+			}
 
-			// // remove items
-			// updateProposersSel.exit().remove();
+			if (showProposers) {
+				let updateProposersSel = proposersG.selectAll(".proposers")
+					.data(data.filter(d => d.category === "Blocks"));
 
-			// // add items
-			// updateProposersSel.enter()
-			// 	.append(d => {
-			// 		if (debug) { console.log("d", JSON.stringify(d)); }
-			// 		let type = "g";
-			// 		let node = document.createElementNS("http://www.w3.org/2000/svg", type);
-			// 		return node;
-			// 	})
-			// 	.attr("class", "bar")
-			// 	.attr("id", d => `bar-${d.proposedBy}`)
-			// 	.attr("transform", d => translateProposer(d))
-			// 	.html(d => proposerTemplate(d));
+				// remove items
+				updateProposersSel.exit().remove();
 
-			// // update items; added items are now part of the update selection
-			// updateProposersSel
-			// 	.attr("transform", d => translateProposer(d))
-			// 	.html(d => proposerTemplate(d));
+				// add items
+				updateProposersSel.enter()
+					.append(d => {
+						if (debug) { console.log("d", JSON.stringify(d)); }
+						let type = "g";
+						let node = document.createElementNS("http://www.w3.org/2000/svg", type);
+						return node;
+					})
+					.attr("class", "proposers")
+					.attr("id", d => `bar-${d.proposedBy}`)
+					.attr("transform", d => translateProposer(d))
+					.html(d => proposerTemplate(d));
 
-			// function translateProposer(d) {
-			// 	let retValX = Math.round(x(d.time));
-			// 	let retValY = y(d.category);
-			// 	return `translate(${retValX},${retValY})`;
-			// }
+				// update items; added items are now part of the update selection
+				updateProposersSel
+					.attr("transform", d => translateProposer(d))
+					.html(d => proposerTemplate(d));
 
-			// function proposerTemplate(d) {
-			// 	return `
-			// 	<circle
-			// 		cx="${getSlotWidth(d) / 2}" 
-			// 		cy="${y(d.category) * .75 - 20}" 
-			// 		r="${setRadius(d)}"
-			// 		fill="${mapBlockStatusToColor(d)}"
-			// 	></circle>
-			// 	<text 
-			// 		x="${offset}"
-			// 		y="${y(d.category) * .75 - 10}"
-			// 		font-size=".5em" 
-			// 		fill="black"
-			// 		opacity="1"
-			// 		>${d.proposedBy}</text>
-			// 	`;
-			// }
+				function translateProposer(d) {
+					let retValX = Math.round(x(d.time));
+					let retValY = y(d.category);
+					return `translate(${retValX},${retValY})`;
+				}
 
-			// function setRadius(d) {
-			// 	if (getSlotWidth(d) < 1) {
-			// 		return .25;
-			// 	} else {
-			// 		return 2;
-			// 	} 
-			// }
+				function proposerTemplate(d) {
+					return `
+					<circle
+						cx="${getSlotWidth(d) / 2}" 
+						cy="${y(d.category) * .75 - 20}" 
+						r="${setRadius(d)}"
+						fill="${mapBlockStatusToColor(d)}"
+					></circle>
+					<text 
+						x="${offset}"
+						y="${y(d.category) * .75 - 10}"
+						font-size=".5em" 
+						fill="white"
+						opacity="1"
+						>${d.proposedBy}</text>
+					`;
+				}
+
+				function setRadius(d) {
+					if (getSlotWidth(d) < 1) {
+						return .25;
+					} else {
+						return 2;
+					} 
+				}
+			
+			}
+			
 			/* 	------------------------------------------------------------------------------------
 				ATTESTATIONS
 				------------------------------------------------------------------------------------ */
@@ -1000,6 +1009,13 @@ function realTimeChartMulti() {
 	chart.showRoots = function (_) {
 		if (arguments.length == 0) return showRoots;
 		showRoots = _;
+		return chart;
+	}
+
+	// show proposers
+	chart.showProposers = function (_) {
+		if (arguments.length == 0) return showProposers;
+		showProposers = _;
 		return chart;
 	}
 

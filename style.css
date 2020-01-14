@@ -1,11 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=Barlow&display=swap');
 
-html {
-    font-family: "Barlow", Arial, Helvetica, sans-serif;
-    color: white;
-}
-
 body {
+    font-family: "Barlow", Arial, Helvetica, sans-serif !important;
     color: white;
     background-color: #0f1927;
 }
@@ -26,6 +22,7 @@ svg {
 }
 
 .axis text {
+    font-family: "Barlow", Arial, Helvetica, sans-serif;
     font-size: 10px;
     fill: white;
 }
@@ -93,4 +90,12 @@ svg {
     stroke: none;
     fill: white;
     fill-opacity: .75;
+}
+
+#controls input {
+    margin-left: 24px;
+}
+
+#controls input:first-of-type {
+    margin-left: 0;
 }

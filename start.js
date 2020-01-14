@@ -41,7 +41,7 @@ async function init() {
 		]) // initial y domain (note array)	
 		.border(false)
 		.width(1440)
-		.height(768)
+		.height(450)
 		.backgroundColor("transparent")
 		.maxSeconds(maxSeconds)
 		.headSlotTimeOffset(SLOTS_PER_EPOCH * SLOT_INTERVAL);	// for visualizing beyond the top boundary of an epoch
@@ -67,6 +67,12 @@ async function init() {
 	d3.select("#show-roots").on("change", function () {
 		let state = d3.select(this).property("checked")
 		chart.showRoots(state);
+	});
+
+	// event handler for show propoers checkbox
+	d3.select("#show-proposers").on("change", function () {
+		let state = d3.select(this).property("checked")
+		chart.showProposers(state);
 	});
 
 	// halt via spacebar
