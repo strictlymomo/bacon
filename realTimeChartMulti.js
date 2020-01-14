@@ -205,7 +205,7 @@ function realTimeChartMulti() {
 			.attr("class", "nowGroup")
 			.attr("transform", "translate(0, 0)")
 			.attr("clip-path", "url(#myClip")
-			.append("g");	
+			.append("g");
 
 		let epochsG = main.append("g")
 			.attr("class", "epochsGroup")
@@ -265,11 +265,11 @@ function realTimeChartMulti() {
 			.append("path")
 			.attr("d", "M 0 0 6 3 0 6 1.5 3")
 			.style("fill", "#ccc");
-			
+
 		svg.append('defs')
-            .append('style')
-            .attr('type', 'text/css')
-            .text("@import url('https://fonts.googleapis.com/css?family=Barlow:400,300,600,700,800);");
+			.append('style')
+			.attr('type', 'text/css')
+			.text("@import url('https://fonts.googleapis.com/css?family=Barlow:400,300,600,700,800);");
 
 		/* 	----------------------------------------
 			scales
@@ -371,50 +371,25 @@ function realTimeChartMulti() {
 				NOW
 				------------------------------------------------------------------------------------ */
 
-				let now = [{now: new Date(new Date().getTime())}];
+			let now = [{ time: new Date(new Date().getTime()) }];
 
-				// create update selection
-				let updateNowSel = nowG.selectAll(".now")
-					.data(now);
-	
-				// remove items
-				updateNowSel.exit().remove();
-	
-				// add items
-				updateNowSel.enter()
-					.append("g")
-					.attr("class", "now")
-					.attr("transform", d => translateNow(d))
-					.html(d => nowTemplate(d));
-	
-				updateNowSel
-					.attr("transform", d => translateNow(d))
-					.html(d => nowTemplate(d));
-	
-				function translateNow(d) {
-					let retValX = Math.round(x(d.now));
-					let retValY = 0;
-					return `translate(${retValX},${retValY})`;
-				}	
-	
-				function nowTemplate(d) {
-					const radius = 4;
-					return `
-						<circle 
-							cx="0" 
-							cy="${height - radius}" 
-							r="${radius}" 
-							fill="red"
-						></circle>
-						<line
-							x1="0" 
-							x2="0" 
-							y1="0"
-							y2="${height}"
-							stroke="red"
-							stroke-width="2"
-						></line>`;
-				}
+			// create update selection
+			let updateNowSel = nowG.selectAll(".now")
+				.data(now);
+
+			// remove items
+			updateNowSel.exit().remove();
+
+			// add items
+			updateNowSel.enter()
+				.append("g")
+				.attr("class", "now")
+				.attr("transform", d => translateNow(d))
+				.html(d => nowTemplate());
+
+			updateNowSel
+				.attr("transform", d => translateNow(d))
+				.html(d => nowTemplate());
 
 			/* 	------------------------------------------------------------------------------------
 				EPOCHS
@@ -457,56 +432,12 @@ function realTimeChartMulti() {
 				.append("g")
 				.attr("class", "bar")
 				.attr("id", d => `bar-${d.label}`)
-				.attr("transform", d => translateEpoch(d))
+				.attr("transform", d => translateDataGroup(d))
 				.html(d => epochTemplate(d));
 
 			updateEpochsSel
-				.attr("transform", d => translateEpoch(d))
+				.attr("transform", d => translateDataGroup(d))
 				.html(d => epochTemplate(d));
-
-			function translateEpoch(d) {
-				let retValX = Math.round(x(d.time));
-				let retValY = y(d.category);
-				return `translate(${retValX},${retValY})`;
-			}
-
-			function epochTemplate(d) {
-				return `
-					<line
-						x1="0" 
-						x2="0" 
-						y1="${-y(d.category)}"
-						y2="${svgHeight}"
-						stroke="white"
-						stroke-opacity=".37"
-					>
-					${justificationAnimationTemplate(d.status)}
-					</line>
-					<text 
-						x="${offset}" 
-						y="${-(y(d.category)) + 8}" 
-						font-size=".71em" 
-						fill="white"
-					>EPOCH ${d.label}
-						<tspan x="${offset}" dy="1.2em">${(d.status).toUpperCase()}</tspan>
-					${justificationAnimationTemplate(d.status)}
-					</text>
-				`;
-			}
-
-			function justificationAnimationTemplate(status) {
-				if ("pending" || "justified") {
-					return `<animate id="animation1"
-					attributeName="opacity"
-					from="0" to="1" dur="3s"
-					begin="0s;animation2.end" />
-					<animate id="animation2"
-					attributeName="opacity"
-					from="1" to="0" dur="3s" 
-					begin="animation1.end" />`;
-				}
-				return "";
-			}
 
 			/* 	------------------------------------------------------------------------------------
 				SLOTS / BLOCKS
@@ -533,148 +464,13 @@ function realTimeChartMulti() {
 				})
 				.attr("class", "bar")
 				.attr("id", d => `bar-${d.slot}`)
-				.attr("transform", d => translateBlock(d))
+				.attr("transform", d => translateDataGroup(d))
 				.html(d => blockTemplate(d));
 
 			// update items; added items are now part of the update selection
 			updateBlocksSel
-				.attr("transform", d => translateBlock(d))
+				.attr("transform", d => translateDataGroup(d))
 				.html(d => blockTemplate(d));
-
-			function translateBlock(d) {
-				let retValX = Math.round(x(d.time));
-				let retValY = y(d.category);
-				// let retValY = y("Epochs"); 
-				return `translate(${retValX},${retValY})`;
-			}
-
-			function blockTemplate(d) {
-				let text = ``;
-				let line = ``;
-				let content = ``;
-				let votes_arr = [];
-
-				if (getSlotWidth(d) > 10) {
-					line = `
-						<line
-							class="slot_line" 
-							x1="0" 
-							x2="0" 
-							y1="${-(y(d.category))}"
-							y2="${y(d.category) * 3}"
-							stroke="white"
-							stroke-opacity=".07"
-						></line>`
-				}
-
-				if (getSlotWidth(d) > 25) {
-					text = `
-						<text 
-							x="${offset}"
-							y="${-(y(d.category) / 4) - 6}"
-							font-size=".75em" 
-							fill="white"
-							opacity=".73"
-							${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
-						>${d.slot}</text>`
-				}
-
-				if (getSlotWidth(d) > 100) {
-					const w = 2;
-					const h = 2;
-					let votes = d.votes;
-					for (votes; votes > 0; votes--) {
-						let vote = `<rect
-							x="${getSlotWidth(d) / 2}"
-							y="${((y(d.category) / 4)) - (2 * h * votes)}"
-							width=${w}
-							height=${h}
-							fill="white"
-							></rect>`;
-						votes_arr.push(vote);
-					};
-
-					if (d.status === "missing") {
-						content = `
-						<text 
-							x="${getSlotWidth(d) / 2}"
-							y="${((y(d.category) / 4))}"
-							font-size="1.5em" 
-							text-anchor="middle"
-							dominant-baseline="middle"
-							fill="white"
-							opacity=".37"
-						>Missed</text>`;
-					}
-
-					if (d.status === "proposed") {
-						content = `
-						<text 
-							x="${offset}"
-							y="0"
-							font-size="1em" 
-							fill="white"
-							opacity="1"
-							dy="0"
-							>
-							<tspan x="${offset}" dy="2.4em">0x.......${d.slot}</tspan>
-							<tspan x="${offset}" dy="1.2em">Proposed by:		${d.proposedBy}</tspan>
-							<tspan x="${offset}" dy="1.2em">Attestations:		${d.votes}</tspan>
-						</text>
-						`;
-					}
-
-				}
-
-				return `
-				${text}
-				${line}
-				<rect 
-					class="block"
-					x="${0}"
-					y="${-(y(d.category) / 4)}" 
-					width="${getSlotWidth(d)}"
-					height="${y(d.category)}"
-					rx="${roundedCorner(d)}" 
-					ry="${roundedCorner(d)}"
-					fill="${mapBlockStatusToColor(d)}"
-					stroke="none"
-				></rect>
-				${content}
-				${/* TODO: ${votes_arr} */""}
-				`;
-			}
-
-			function getSlotWidth(d) {
-				let t1 = x(d.time);
-				let t2 = x(new Date(d.time.getTime() + 12000));
-				return t2 - t1;
-			}
-
-			function roundedCorner(d) {
-				if (getSlotWidth(d) > 20) {
-					return 4;
-				}
-				return 0;
-			}
-
-			function mapBlockStatusToColor(d) {
-				let retVal = "none";
-				switch (d.status) {
-					case "proposed":
-						retVal = "rgb(54, 149, 141)";
-						break;
-					case "orphaned":
-						retVal = "rgba(54, 149, 141, .67)";
-						break;
-					case "missing":
-						retVal = "transparent"
-						break;
-					default:
-				}
-				return retVal;
-			}
-
 
 			/* 	------------------------------------------------------------------------------------
 				ROOTS
@@ -695,16 +491,14 @@ function realTimeChartMulti() {
 				updateRootsSel.enter()
 					.append("path")
 					.attr("class", "roots")
-					.attr("id", d => `bar-root-${d.slot}`); //TODO: block root
+					.attr("id", d => `root-${d.slot}`);
 
 				// update items; added items are now part of the update selection
 				updateRootsSel
 					.attr("d", (d, i) => {
-						// y0 = y(d.category) + (y(d.category) / 4),
-						// cpy = y(d.category) + (3 * y(d.category) / 8) + offset + 1,
 						const x0 = Math.round(x(d.time)) + (slotWidth / 2),
 							y0 = y(d.category) * 1.75,
-							x1 = getPreviousRootPosition(updateRootsSel, i) + (slotWidth * (3/4)),
+							x1 = getPreviousRootPosition(updateRootsSel, i) + (slotWidth * (3 / 4)),
 							y1 = y0,
 							cpx = x1 + ((x0 - x1) * .5),
 							cpy = y(d.category) * 1.75 + (1 * y(d.category) / 8) + offset + 1,
@@ -734,27 +528,6 @@ function realTimeChartMulti() {
 								return ""
 						}
 					});
-
-				// TODO: calling this function kills memory. store the root hashes or rely on the API
-				function getPreviousRootPosition(selection, i) {
-					let prevBlock = selection.data()[i - 1];
-					let prevBlockIndex = i - 1;
-					let parentIndex = 0;
-
-					// there is a block
-					if (prevBlock) {
-						// ... and it is the parent block
-						if (prevBlock.status === "proposed") {
-							parentIndex = Math.round(x(prevBlock.time));
-							return parentIndex;
-						}
-						// ... and it is a missing or orphaned block. let's recursively find parent...
-						parentIndex = getPreviousRootPosition(selection, prevBlockIndex);
-						return parentIndex;
-					}
-					// no block
-					return parentIndex;
-				}
 			}
 
 			/* 	------------------------------------------------------------------------------------
@@ -782,57 +555,24 @@ function realTimeChartMulti() {
 					})
 					.attr("class", "proposers")
 					.attr("id", d => `bar-${d.proposedBy}`)
-					.attr("transform", d => translateProposer(d))
+					.attr("transform", d => translateDataGroup(d))
 					.html(d => proposerTemplate(d));
 
 				// update items; added items are now part of the update selection
 				updateProposersSel
-					.attr("transform", d => translateProposer(d))
+					.attr("transform", d => translateDataGroup(d))
 					.html(d => proposerTemplate(d));
-
-				function translateProposer(d) {
-					let retValX = Math.round(x(d.time));
-					let retValY = y(d.category);
-					return `translate(${retValX},${retValY})`;
-				}
-
-				function proposerTemplate(d) {
-					return `
-					<circle
-						cx="${getSlotWidth(d) / 2}" 
-						cy="${y(d.category) * .75 - 20}" 
-						r="${setRadius(d)}"
-						fill="${mapBlockStatusToColor(d)}"
-					></circle>
-					<text 
-						x="${offset}"
-						y="${y(d.category) * .75 - 10}"
-						font-size=".5em" 
-						fill="white"
-						opacity="1"
-						>${d.proposedBy}</text>
-					`;
-				}
-
-				function setRadius(d) {
-					if (getSlotWidth(d) < 1) {
-						return .25;
-					} else {
-						return 2;
-					} 
-				}
-			
 			}
-			
+
 			/* 	------------------------------------------------------------------------------------
 				ATTESTATIONS
 				------------------------------------------------------------------------------------ */
 
-			let updateAttestationsSel = attestationsG.selectAll(".bar")
-				.data(data.filter(d => d.category === "Blocks"));
+			// let updateAttestationsSel = attestationsG.selectAll(".bar")
+			// 	.data(data.filter(d => d.category === "Blocks"));
 
 			// remove items
-			updateAttestationsSel.exit().remove();
+			// updateAttestationsSel.exit().remove();
 
 			// add items
 			// updateAttestationsSel.enter()
@@ -844,47 +584,13 @@ function realTimeChartMulti() {
 			// 	})
 			// 	.attr("class", "bar")
 			// 	.attr("id", d => `bar-${d.attestations}`)
-			// 	.attr("transform", d => translateAttestations(d))
+			// 	.attr("transform", d => translateDataGroup(d))
 			// 	.html(d => attestationsTemplate(d));
 
 			// update items; added items are now part of the update selection
 			// updateAttestationsSel
-			// 	.attr("transform", d => translateAttestations(d))
+			// 	.attr("transform", d => translateDataGroup(d))
 			// 	.html(d => attestationsTemplate(d));
-
-			function translateAttestations(d) {
-				let retValX = Math.round(x(d.time));
-				let retValY = y(d.category);
-				return `translate(${retValX},${retValY})`;
-			}
-
-			function attestationsTemplate(d) {
-				const w = 2;
-				const h = 2;
-				let votes = d.votes;
-				let votes_arr = [];
-				for (votes; votes > 0; votes--) {
-					let vote = `<rect
-						x="${offset * 2}"
-						y="${y(d.category) - (2 * h * votes)}"
-						width=${w}
-						height=${h}
-						fill="black"
-						></rect>`;
-					votes_arr.push(vote);
-				};
-				// y="${(y(d.category) * 1.5) - (2 * h * votes) - 40 }"
-				return `
-				${votes_arr}
-				<text 
-					x="${offset}"
-					y="${y(d.category) * 1.5 - 10}"
-					font-size=".5em" 
-					fill="black"
-					opacity="1"
-					>${d.votes}</text>
-				`;
-			}
 
 			/* 	------------------------------------------------------------------------------------
 				nav update
@@ -912,6 +618,304 @@ function realTimeChartMulti() {
 				})
 
 		} // end refreshChart function
+
+		/* 	------------------------------------------------------------------------------------
+			templates and translations
+			------------------------------------------------------------------------------------ */
+
+		function translateNow(d) {
+			let retValX = Math.round(x(d.time));
+			let retValY = 0;
+			return `translate(${retValX},${retValY})`;
+		}
+
+		function translateDataGroup(d) {
+			let retValX = Math.round(x(d.time));
+			let retValY = y(d.category);
+			return `translate(${retValX},${retValY})`;
+		}
+
+		/* 	--------------------------------------
+			NOW
+			-------------------------------------- */
+
+		function nowTemplate() {
+			const radius = 4;
+			return `
+				<circle 
+					cx="0" 
+					cy="${height - radius}" 
+					r="${radius}" 
+					fill="red"
+				></circle>
+				<line
+					x1="0" 
+					x2="0" 
+					y1="0"
+					y2="${height}"
+					stroke="red"
+					stroke-width="2"
+				></line>`;
+		}
+
+		/* 	--------------------------------------
+			EPOCH
+			-------------------------------------- */
+
+		function epochTemplate(d) {
+			return `
+				<line
+					x1="0" 
+					x2="0" 
+					y1="${-y(d.category)}"
+					y2="${svgHeight}"
+					stroke="white"
+					stroke-opacity=".37"
+				>
+				${justificationAnimationTemplate(d.status)}
+				</line>
+				<text 
+					x="${offset}" 
+					y="${-(y(d.category)) + 8}" 
+					font-size=".71em" 
+					fill="white"
+				>EPOCH ${d.label}
+					<tspan x="${offset}" dy="1.2em">${(d.status).toUpperCase()}</tspan>
+				${justificationAnimationTemplate(d.status)}
+				</text>
+			`;
+		}
+
+		function justificationAnimationTemplate(status) {
+			if ("pending" || "justified") {
+				return `<animate id="animation1"
+				attributeName="opacity"
+				from="0" to="1" dur="3s"
+				begin="0s;animation2.end" />
+				<animate id="animation2"
+				attributeName="opacity"
+				from="1" to="0" dur="3s" 
+				begin="animation1.end" />`;
+			}
+			return "";
+		}
+
+		/* 	--------------------------------------
+			BLOCK
+			-------------------------------------- */
+
+		function blockTemplate(d) {
+			let text = ``;
+			let line = ``;
+			let content = ``;
+			let votes_arr = [];
+
+			if (getSlotWidth(d) > 10) {
+				line = `
+					<line
+						class="slot_line" 
+						x1="0" 
+						x2="0" 
+						y1="${-(y(d.category))}"
+						y2="${y(d.category) * 3}"
+						stroke="white"
+						stroke-opacity=".07"
+					></line>`
+			}
+
+			if (getSlotWidth(d) > 25) {
+				text = `
+					<text 
+						x="${offset}"
+						y="${-(y(d.category) / 4) - 6}"
+						font-size=".75em" 
+						fill="white"
+						opacity=".73"
+						${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
+					>${d.slot}</text>`
+			}
+
+			if (getSlotWidth(d) > 100) {
+				const w = 2;
+				const h = 2;
+				let votes = d.votes;
+				for (votes; votes > 0; votes--) {
+					let vote = `<rect
+						x="${getSlotWidth(d) / 2}"
+						y="${((y(d.category) / 4)) - (2 * h * votes)}"
+						width=${w}
+						height=${h}
+						fill="white"
+						></rect>`;
+					votes_arr.push(vote);
+				};
+
+				if (d.status === "missing") {
+					content = `
+					<text 
+						x="${getSlotWidth(d) / 2}"
+						y="${((y(d.category) / 4))}"
+						font-size="1.5em" 
+						text-anchor="middle"
+						dominant-baseline="middle"
+						fill="white"
+						opacity=".37"
+					>Missed</text>`;
+				}
+
+				if (d.status === "proposed") {
+					content = `
+					<text 
+						x="${offset}"
+						y="0"
+						font-size="1em" 
+						fill="white"
+						opacity="1"
+						dy="0"
+						>
+						<tspan x="${offset}" dy="2.4em">0x.......${d.slot}</tspan>
+						<tspan x="${offset}" dy="1.2em">Proposed by:		${d.proposedBy}</tspan>
+						<tspan x="${offset}" dy="1.2em">Attestations:		${d.votes}</tspan>
+					</text>
+					`;
+				}
+
+			}
+
+			return `
+			${text}
+			${line}
+			<rect 
+				class="block"
+				x="${0}"
+				y="${-(y(d.category) / 4)}" 
+				width="${getSlotWidth(d)}"
+				height="${y(d.category)}"
+				rx="${roundedCorner(d)}" 
+				ry="${roundedCorner(d)}"
+				fill="${mapBlockStatusToColor(d)}"
+				stroke="none"
+			></rect>
+			${content}
+			${/* TODO: ${votes_arr} */""}
+			`;
+		}
+
+		function getSlotWidth(d) {
+			let t1 = x(d.time);
+			let t2 = x(new Date(d.time.getTime() + 12000));
+			return t2 - t1;
+		}
+
+		function roundedCorner(d) {
+			if (getSlotWidth(d) > 20) {
+				return 4;
+			}
+			return 0;
+		}
+
+		function mapBlockStatusToColor(d) {
+			let retVal = "none";
+			switch (d.status) {
+				case "proposed":
+					retVal = "rgb(54, 149, 141)";
+					break;
+				case "orphaned":
+					retVal = "rgba(54, 149, 141, .67)";
+					break;
+				case "missing":
+					retVal = "transparent"
+					break;
+				default:
+			}
+			return retVal;
+		}
+
+		/* 	--------------------------------------
+			ROOTS
+			-------------------------------------- */
+
+		// TODO: calling this function kills memory. store the root hashes or rely on the API
+		function getPreviousRootPosition(selection, i) {
+			let prevBlock = selection.data()[i - 1];
+			let prevBlockIndex = i - 1;
+			let parentIndex = 0;
+
+			// there is a block
+			if (prevBlock) {
+				// ... and it is the parent block
+				if (prevBlock.status === "proposed") {
+					parentIndex = Math.round(x(prevBlock.time));
+					return parentIndex;
+				}
+				// ... and it is a missing or orphaned block. recursively find parent block.
+				parentIndex = getPreviousRootPosition(selection, prevBlockIndex);
+				return parentIndex;
+			}
+			// no block
+			return parentIndex;
+		}
+
+		/* 	--------------------------------------
+			PROPOSERS
+			-------------------------------------- */
+
+		function proposerTemplate(d) {
+			return `
+				<circle
+					cx="${getSlotWidth(d) / 2}" 
+					cy="${y(d.category) * .75 - 20}" 
+					r="${setRadius(d)}"
+					fill="${mapBlockStatusToColor(d)}"
+				></circle>
+				<text 
+					x="${offset}"
+					y="${y(d.category) * .75 - 10}"
+					font-size=".5em" 
+					fill="white"
+					opacity="1"
+					>${d.proposedBy}</text>
+				`;
+		}
+
+		function setRadius(d) {
+			if (getSlotWidth(d) < 1) {
+				return .25;
+			} else {
+				return 2;
+			}
+		}
+
+		/* 	--------------------------------------
+			ATTESTATIONS
+			-------------------------------------- */
+
+		function attestationsTemplate(d) {
+			const w = 2;
+			const h = 2;
+			let votes = d.votes;
+			let votes_arr = [];
+			for (votes; votes > 0; votes--) {
+				let vote = `<rect
+					x="${offset * 2}"
+					y="${y(d.category) - (2 * h * votes)}"
+					width=${w}
+					height=${h}
+					fill="black"
+					></rect>`;
+				votes_arr.push(vote);
+			};
+			return `
+			${votes_arr}
+			<text 
+				x="${offset}"
+				y="${y(d.category) * 1.5 - 10}"
+				font-size=".5em" 
+				fill="black"
+				opacity="1"
+				>${d.votes}</text>
+			`;
+		}
 
 
 		/* 	------------------------------------------------------------------------------------
