@@ -201,6 +201,12 @@ function realTimeChartMulti() {
 		// the former will contain a clip path to constrain objects to the chart area; 
 		// no equivalent clip path is created for the nav chart as the data itself
 		// is clipped to the full time domain
+		let nowG = main.append("g")
+			.attr("class", "nowGroup")
+			.attr("transform", "translate(0, 0)")
+			.attr("clip-path", "url(#myClip")
+			.append("g");	
+
 		let epochsG = main.append("g")
 			.attr("class", "epochsGroup")
 			.attr("transform", "translate(0, 0)")
@@ -360,6 +366,55 @@ function realTimeChartMulti() {
 			// determine number of categories
 			let categoryCount = yDomain.length;
 			if (debug) console.log("yDomain", yDomain)
+
+			/* 	------------------------------------------------------------------------------------
+				NOW
+				------------------------------------------------------------------------------------ */
+
+				let now = [{now: new Date(new Date().getTime())}];
+
+				// create update selection
+				let updateNowSel = nowG.selectAll(".now")
+					.data(now);
+	
+				// remove items
+				updateNowSel.exit().remove();
+	
+				// add items
+				updateNowSel.enter()
+					.append("g")
+					.attr("class", "now")
+					.attr("transform", d => translateNow(d))
+					.html(d => nowTemplate(d));
+	
+				updateNowSel
+					.attr("transform", d => translateNow(d))
+					.html(d => nowTemplate(d));
+	
+				function translateNow(d) {
+					let retValX = Math.round(x(d.now));
+					let retValY = 0;
+					return `translate(${retValX},${retValY})`;
+				}	
+	
+				function nowTemplate(d) {
+					const radius = 4;
+					return `
+						<circle 
+							cx="0" 
+							cy="${height - radius}" 
+							r="${radius}" 
+							fill="red"
+						></circle>
+						<line
+							x1="0" 
+							x2="0" 
+							y1="0"
+							y2="${height}"
+							stroke="red"
+							stroke-width="2"
+						></line>`;
+				}
 
 			/* 	------------------------------------------------------------------------------------
 				EPOCHS
@@ -872,7 +927,6 @@ function realTimeChartMulti() {
 			let offset = extent[0].getTime() - xNav.domain()[0].getTime();
 
 			// compute new nav extents
-			// endTime = new Date();
 			endTime = new Date(new Date().getTime() + headSlotTimeOffset);
 			startTime = new Date(endTime.getTime() - maxSeconds * 1000);
 
