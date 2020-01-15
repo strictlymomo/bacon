@@ -50,12 +50,12 @@ async function init() {
 		Event Handlers
 		----------------------------------- */
 	d3.select("#debug").on("change", function () {
-		let state = d3.select(this).property("checked")
+		let state = d3.select(this).property("checked");
 		chart.debug(state);
 	});
 
 	d3.select("#halt").on("change", function () {
-		let state = d3.select(this).property("checked")
+		let state = d3.select(this).property("checked");
 		chart.halt(state);
 	});
 
@@ -64,17 +64,17 @@ async function init() {
 	}
 
 	d3.select("#show-roots").on("change", function () {
-		let state = d3.select(this).property("checked")
+		let state = d3.select(this).property("checked");
 		chart.showRoots(state);
 	});
 
 	d3.select("#show-proposers").on("change", function () {
-		let state = d3.select(this).property("checked")
+		let state = d3.select(this).property("checked");
 		chart.showProposers(state);
 	});
 
 	d3.select("#show-attestations").on("change", function () {
-		let state = d3.select(this).property("checked")
+		let state = d3.select(this).property("checked");
 		chart.showAttestations(state);
 	});
 
@@ -83,8 +83,8 @@ async function init() {
 		----------------------------------- */
 
 	// in a normal use case, real time data would arrive through the network or some other mechanism
-	let d = EPOCHS_AGO * -SLOTS_PER_EPOCH;
-	let timeout = 0;
+	let d = EPOCHS_AGO * -SLOTS_PER_EPOCH,
+		timeout = 0;
 
 	/* prepend recent chain data prior to the current head slot */
 	generatePrevData(d);
@@ -100,8 +100,8 @@ async function init() {
 
 	function generatePrevData(d) {
 		for (d; d <= -1; d++) {
-			const msAgo = Math.abs(d) * SLOT_INTERVAL;
-			const timestamp = new Date(KICKOFF.getTime() - msAgo);
+			const msAgo = Math.abs(d) * SLOT_INTERVAL,
+				timestamp = new Date(KICKOFF.getTime() - msAgo);
 			generateEpochPrev(d, timestamp, msAgo);
 			generateBlock(d, timestamp);
 		}
@@ -155,8 +155,8 @@ async function init() {
 
 	function generateBlock(d, timestamp) {
 		// random block status
-		let seed = Math.random();
-		let status;
+		let seed = Math.random(),
+			status;
 
 		if (seed < .1) {
 			status = "orphaned";
@@ -242,15 +242,14 @@ async function init() {
 	}
 
 	function generateRandomAttestations(status, activeValidatorSet) {
-		let committeeSize = 32;
-		let maxAttestations = Math.round(activeValidatorSet / committeeSize);
+		let committeeSize = 32,
+			maxAttestations = Math.round(activeValidatorSet / committeeSize);
 		switch (status) {
-			case "orphaned":
+			case "proposed": case "orphaned":
 				return Math.round(Math.random() * maxAttestations);
 			case "missing":
 				return 0;
-			case "proposed":
-				return Math.round(Math.random() * maxAttestations);
+			default:
 		}
 	}
 

@@ -70,10 +70,7 @@ function realTimeChartMulti() {
 		svg = selection.append("svg")
 			.attr("width", svgWidth)
 			.attr("height", svgHeight)
-			.style("border", () => {
-				if (border) return "1px solid #e2e8f0";
-				else return null;
-			});
+			.style("border", () => border ? "1px solid #e2e8f0" : null);
 
 		/* 	------------------------------------------------------------------------------------
 			create main chart
@@ -119,10 +116,7 @@ function realTimeChartMulti() {
 			.attr("x", width / 2)
 			.attr("y", 25)
 			.attr("dy", ".71em")
-			.text(() => {
-				let text = xTitle == undefined ? "" : xTitle;
-				return text;
-			});
+			.text(() => (xTitle === undefined) ? "" : xTitle);
 
 		// in y axis group, add y axis title
 		yAxisG.append("text")
@@ -131,10 +125,7 @@ function realTimeChartMulti() {
 			.attr("x", - height / 2)
 			.attr("y", -margin.left + 15) //-35
 			.attr("dy", ".71em")
-			.text(() => {
-				let text = yTitle == undefined ? "" : yTitle;
-				return text;
-			});
+			.text(() => (yTitle === undefined) ? "" : yTitle);
 
 		// in main group, add chart title
 		main.append("text")
@@ -142,10 +133,7 @@ function realTimeChartMulti() {
 			.attr("x", width / 2)
 			.attr("y", -20)
 			.attr("dy", ".71em")
-			.text(() => {
-				let text = chartTitle == undefined ? "" : chartTitle;
-				return text;
-			});
+			.text(() => (chartTitle === undefined) ? "" : chartTitle);
 
 		// define main chart scales
 		x = d3.scaleTime().range([0, width]);
@@ -444,7 +432,7 @@ function realTimeChartMulti() {
 				SLOTS / BLOCKS
 				------------------------------------------------------------------------------------ */
 
-			let updateBlocksSel = blocksG.selectAll(".bar")
+			let updateBlocksSel = blocksG.selectAll(".blocks")
 				.data(data.filter(d => d.category === "Blocks"));
 
 			let slotWidth = 1;
@@ -458,13 +446,13 @@ function realTimeChartMulti() {
 			// add items
 			updateBlocksSel.enter()
 				.append(d => {
-					if (debug) { console.log("d", JSON.stringify(d)); }
+					if (debug) console.log("d", JSON.stringify(d));
 					let type = "g";
 					let node = document.createElementNS("http://www.w3.org/2000/svg", type);
 					return node;
 				})
-				.attr("class", "bar")
-				.attr("id", d => `bar-${d.slot}`)
+				.attr("class", "blocks")
+				.attr("id", d => `block-${d.slot}`)
 				.attr("transform", d => translateDataGroup(d))
 				.html(d => blockTemplate(d));
 
@@ -612,16 +600,12 @@ function realTimeChartMulti() {
 			// add items
 			updateBlocksSelNav.enter().append("circle")
 				.attr("r", 1)
-				.attr("fill", "white")
+				.attr("fill", "white");
 
 			// added items now part of update selection; set coordinates of points
 			updateBlocksSelNav
-				.attr("cx", d => {
-					return Math.round(xNav(d.time));
-				})
-				.attr("cy", d => {
-					return yNav(d.category);
-				})
+				.attr("cx", d => Math.round(xNav(d.time)))
+				.attr("cy", d => yNav(d.category));
 
 		} // end refreshChart function
 
@@ -630,14 +614,14 @@ function realTimeChartMulti() {
 			------------------------------------------------------------------------------------ */
 
 		function translateNow(d) {
-			let retValX = Math.round(x(d.time));
-			let retValY = 0;
+			let retValX = Math.round(x(d.time)),
+				retValY = 0;
 			return `translate(${retValX},${retValY})`;
 		}
 
 		function translateDataGroup(d) {
-			let retValX = Math.round(x(d.time));
-			let retValY = y(d.category);
+			let retValX = Math.round(x(d.time)),
+				retValY = y(d.category);
 			return `translate(${retValX},${retValY})`;
 		}
 
@@ -669,8 +653,8 @@ function realTimeChartMulti() {
 			-------------------------------------- */
 
 		function translateEpoch(d) {
-			let retValX = Math.round(x(d.time));
-			let retValY = 0;
+			let retValX = Math.round(x(d.time)),
+				retValY = 0;
 			return `translate(${retValX},${retValY})`;
 		}
 
@@ -699,7 +683,7 @@ function realTimeChartMulti() {
 		}
 
 		function justificationAnimationTemplate(status) {
-			if ("pending" || "justified") {
+			if (status === "pending" || "justified") {
 				return `<animate id="animation1"
 				attributeName="opacity"
 				from="0" to="1" dur="3s"
@@ -717,10 +701,10 @@ function realTimeChartMulti() {
 			-------------------------------------- */
 
 		function blockTemplate(d) {
-			let text = ``;
-			let line = ``;
-			let content = ``;
-			let votes_arr = [];
+			let text = ``,
+				line = ``,
+				content = ``,
+				votes_arr = [];
 
 			if (getSlotWidth(d) > 10) {
 				line = `
@@ -748,9 +732,9 @@ function realTimeChartMulti() {
 			}
 
 			if (getSlotWidth(d) > 100) {
-				const w = 2;
-				const h = 2;
-				let votes = d.votes;
+				let w = 2,
+					h = 2,
+					votes = d.votes;
 				for (votes; votes > 0; votes--) {
 					let vote = `<rect
 						x="${getSlotWidth(d) / 2}"
@@ -762,36 +746,35 @@ function realTimeChartMulti() {
 					votes_arr.push(vote);
 				};
 
-				if (d.status === "missing") {
-					content = `
-					<text 
-						x="${getSlotWidth(d) / 2}"
-						y="${((y(d.category) / 4))}"
-						font-size="1.5em" 
-						text-anchor="middle"
-						dominant-baseline="middle"
-						fill="white"
-						opacity=".37"
-					>Missed</text>`;
+				switch (d.status) {
+					case "missing":
+						content = `<text 
+							x="${getSlotWidth(d) / 2}"
+							y="${((y(d.category) / 4))}"
+							font-size="1.5em" 
+							text-anchor="middle"
+							dominant-baseline="middle"
+							fill="white"
+							opacity=".37"
+						>Missed</text>`;
+						break;
+					case "proposed": case "orphaned":	
+						content = `<text 
+							x="${offset}"
+							y="0"
+							font-size="1em" 
+							fill="white"
+							opacity="1"
+							dy="0"
+							>
+							<tspan x="${offset}" dy="2.4em">0x.......${d.slot}</tspan>
+							<tspan x="${offset}" dy="1.2em">Proposed by:		${d.proposedBy}</tspan>
+							<tspan x="${offset}" dy="1.2em">Attestations:		${d.votes}</tspan>
+						</text>`;
+						break;
+					default:
+						break;
 				}
-
-				if (d.status === "proposed") {
-					content = `
-					<text 
-						x="${offset}"
-						y="0"
-						font-size="1em" 
-						fill="white"
-						opacity="1"
-						dy="0"
-						>
-						<tspan x="${offset}" dy="2.4em">0x.......${d.slot}</tspan>
-						<tspan x="${offset}" dy="1.2em">Proposed by:		${d.proposedBy}</tspan>
-						<tspan x="${offset}" dy="1.2em">Attestations:		${d.votes}</tspan>
-					</text>
-					`;
-				}
-
 			}
 
 			return `
@@ -814,16 +797,13 @@ function realTimeChartMulti() {
 		}
 
 		function getSlotWidth(d) {
-			let t1 = x(d.time);
-			let t2 = x(new Date(d.time.getTime() + 12000));
+			let t1 = x(d.time),
+				t2 = x(new Date(d.time.getTime() + 12000));
 			return t2 - t1;
 		}
 
 		function roundedCorner(d) {
-			if (getSlotWidth(d) > 20) {
-				return 4;
-			}
-			return 0;
+			return getSlotWidth(d) > 20 ? 4 : 0;
 		}
 
 		function mapBlockStatusToColor(d) {
@@ -839,6 +819,7 @@ function realTimeChartMulti() {
 					retVal = "transparent"
 					break;
 				default:
+					break;
 			}
 			return retVal;
 		}
@@ -849,9 +830,9 @@ function realTimeChartMulti() {
 
 		// TODO: calling this function kills memory. store the root hashes or rely on the API
 		function getPreviousRootPosition(selection, i) {
-			let prevBlock = selection.data()[i - 1];
-			let prevBlockIndex = i - 1;
-			let parentIndex = 0;
+			let prevBlock = selection.data()[i - 1],
+				prevBlockIndex = i - 1,
+				parentIndex = 0;
 
 			// there is a block
 			if (prevBlock) {
@@ -891,11 +872,7 @@ function realTimeChartMulti() {
 		}
 
 		function setRadius(d) {
-			if (getSlotWidth(d) < 1) {
-				return .25;
-			} else {
-				return 2;
-			}
+			return getSlotWidth(d) < 1 ? .25 : 2;
 		}
 
 		/* 	--------------------------------------
@@ -903,10 +880,10 @@ function realTimeChartMulti() {
 			-------------------------------------- */
 
 		function attestationsTemplate(d) {
-			const w = 2;
-			const h = 2;
-			let votes = d.votes;
-			let votes_arr = [];
+			let w = 2,
+				h = 2,
+				votes = d.votes,
+				votes_arr = [];
 			for (votes; votes > 0; votes--) {
 				let vote = `<rect
 					x="${offset * 2}"
@@ -939,8 +916,8 @@ function realTimeChartMulti() {
 			if (halted) return;
 
 			// get current viewport extent
-			let interval = extent[1].getTime() - extent[0].getTime();
-			let offset = extent[0].getTime() - xNav.domain()[0].getTime();
+			let interval = extent[1].getTime() - extent[0].getTime(),
+				offset = extent[0].getTime() - xNav.domain()[0].getTime();
 
 			// compute new nav extents
 			endTime = new Date(new Date().getTime() + headSlotTimeOffset);
