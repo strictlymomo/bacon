@@ -809,11 +809,17 @@ function realTimeChartMulti() {
 		function mapBlockStatusToColor(d) {
 			let retVal = "none";
 			switch (d.status) {
+				case "finalized":
+					retVal = "rgba(54, 149, 141, 1)";
+					break;
+				case "justified":
+					retVal = "rgba(54, 149, 141, .67)";
+					break;	
 				case "proposed":
-					retVal = "rgb(54, 149, 141)";
+					retVal = "rgba(54, 149, 141, .17)";
 					break;
 				case "orphaned":
-					retVal = "rgba(54, 149, 141, .67)";
+					retVal = "rgba(0, 0, 0, .17)";
 					break;
 				case "missing":
 					retVal = "transparent"
