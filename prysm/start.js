@@ -124,13 +124,7 @@ async function init() {
 			for (const epoch of prevEpochs) {
 
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
-				let epochObj = {
-					category: "Epochs",
-					time: new Date(new Date(NETWORK_GENESIS_TIME).getTime() + (epoch * 32 * 12 * 1000)),
-					label: epoch,
-					status: "pending"
-				};
-				chart.datum(epochObj);
+				chart.datum(createEpoch(epoch));
 
 				blockContainersInEpoch.forEach((blockContainer, i) => {
 					let currSlot = blockContainersInEpoch[i].block.block.slot;
@@ -144,27 +138,13 @@ async function init() {
 							do {
 								difference--;
 								console.log(`%c                            ${counter}`, "color: orange");
-								let block = {
-									category: "Blocks",
-									epoch: calculateEpoch(counter),
-									slot: counter,
-									status: "missed",
-									time: calculateTime(counter),
-								}
-								chart.datum(block);
+								chart.datum(createMissingBlock(counter));
 								counter++;
 							} while (difference > 1);
 						};
 					}
 					console.log("                           ", blockContainer.block.block.slot, "   |   ", base64toHEX(blockContainer.block.block.parentRoot).substr(2, 4), " / ", base64toHEX(blockContainer.blockRoot).substr(2, 4), "   |   ", parseInt((blockContainer.block.block.slot) % SLOTS_PER_EPOCH), "   |   ", calculateStatus(blockContainer.block.block.slot), "   |   ", calculateEpoch(blockContainer.block.block.slot));
-					let block = {
-						category: "Blocks",
-						epoch: calculateEpoch(blockContainer.block.block.slot),
-						slot: blockContainer.block.block.slot,
-						status: calculateStatus(blockContainer.block.block.slot),
-						time: calculateTime(blockContainer.block.block.slot),
-					}
-					chart.datum(block);
+					chart.datum(createBlock(blockContainer.block.block.slot));
 				})
 			}
 		},
@@ -201,17 +181,10 @@ async function init() {
 	await getInitial();
 	await BLOCKS.getBlocksForPreviousEpochs(status.headEpoch);
 
-	// TODO: render chainhead, epoch, block, etc.
-
 	// Poll for updates
-	// let poller = setInterval(() => poll(), pollInterval);
+	let poller = setInterval(() => poll(), pollInterval);
 
-	async function getInitial() {
-
-		calculateCurrentState();
-
-		console.log("=========================== GETTING INITIAL");
-
+	async function updateState() {
 		chainhead = await CHAINHEAD.getChainhead();
 		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
 
@@ -226,6 +199,15 @@ async function init() {
 		status.headSlot = parseInt(chainhead.headSlot);
 		status.headEpoch = parseInt(chainhead.headEpoch);
 		console.log("%cHead Slot | Epoch:         ", "font-weight: bold", status.headSlot, "|", status.headEpoch);
+	}
+
+	async function getInitial() {
+
+		calculateCurrentState();
+
+		console.log("=========================== GETTING INITIAL");
+
+		await updateState();
 
 		// TO DO: EXCEPTION: if chainhead is less than currentSlot, do something about it.
 
@@ -240,6 +222,8 @@ async function init() {
 	}
 
 	async function getLatest() {
+
+		// TODO: Update state. make sure it doesn't overwrite the headSlot cursor below...
 
 		console.log("===========================");
 
@@ -274,11 +258,11 @@ async function init() {
 				if (status.gapBlock) {
 					console.log("block ?                    ", status.gapBlock);
 					console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(status.gapBlock.blockRoot));
-					// TO DO: push gapBlock to nodes
+					chart.datum(createBlock(status.gapBlock.block.block.slot));
 				} else {
-					console.log("block ?                    ", status.gapBlock);
 					// block is missing
-					// TO DO: missing block object to nodes
+					console.log("block ?                    ", status.gapBlock);
+					chart.datum(createMissingBlock(status.gapBlock.block.block.slot));
 				}
 				difference--;
 				prev++;
@@ -293,8 +277,10 @@ async function init() {
 			status.currentBlock = await BLOCKS.getBlock(status.headSlot);
 			if (status.currentBlock) {
 				console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(status.currentBlock.blockRoot));
+				chart.datum(createBlock(status.currentBlock.block.block.slot));
 			} else if (status.currentBlock === null) {
 				console.log("No block");
+				chart.datum(createMissingBlock(status.currentBlock.block.block.slot));
 			}
 
 		} else if (difference === 1) {
@@ -307,10 +293,10 @@ async function init() {
 			status.currentBlock = await BLOCKS.getBlock(status.headSlot);
 			if (status.currentBlock) {
 				console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(status.currentBlock.blockRoot));
-				// TO DO: push block to nodes
+				chart.datum(createBlock(status.currentBlock.block.block.slot));
 			} else if (status.currentBlock === null) {
 				console.log("No block");
-				// TO DO: push missing to nodes
+				chart.datum(createMissingBlock(status.currentBlock.block.block.slot));
 			}
 		}
 	}
@@ -330,6 +316,35 @@ async function init() {
 		return hex;
 	}
 
+	function createBlock(slot) {
+		return {
+			category: "Blocks",
+			epoch: calculateEpoch(slot),
+			slot: slot,
+			status: calculateStatus(slot),
+			time: calculateTime(slot),
+		}
+	}
+
+	function createMissingBlock(slot) {
+		return {
+			category: "Blocks",
+			epoch: calculateEpoch(slot),
+			slot: slot,
+			status: "missed",
+			time: calculateTime(slot),
+		}
+	}
+
+	function createEpoch(epoch) {
+		return {
+			category: "Epochs",
+			time: calculateTimeFromEpoch(epoch),
+			label: epoch,
+			status: "pending"
+		};
+	}
+
 	function calculateCurrentState() {
 		let now = Math.floor((new Date()).getTime() / 1000);
 		let genesis = Math.floor(new Date(NETWORK_GENESIS_TIME).getTime() / 1000);
@@ -340,7 +355,7 @@ async function init() {
 	}
 
 	function calculateTime(slot) {
-		return new Date(new Date(NETWORK_GENESIS_TIME).getTime() + (slot * 1000 * 12))
+		return new Date(new Date(NETWORK_GENESIS_TIME).getTime() + (slot * SECONDS_PER_SLOT * 1000))
 	}
 
 	function calculateEpoch(slot) {
@@ -348,9 +363,7 @@ async function init() {
 	}
 
 	function calculateTimeFromEpoch(epoch) {
-		/*
-			100
-		*/
+		return new Date(new Date(NETWORK_GENESIS_TIME).getTime() + (epoch * SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
 	}
 
 	function calculateStatus(s) {
