@@ -168,12 +168,12 @@ async function init() {
 
 		/*	Example Block
 				
-			Epoch: 			27191
-			Slot: 			271540
-			Status:			Proposed
-			Time: 			12/12/2019 9:44:26 PM (a few seconds ago)
-			Proposed by:	371
-			Votes:			[
+			epoch: 			27191
+			slot: 			271540
+			status:			Proposed
+			time: 			12/12/2019 9:44:26 PM (a few seconds ago)
+			proposed by:	371
+			votes:			[
 								{
 									...
 									data: {
