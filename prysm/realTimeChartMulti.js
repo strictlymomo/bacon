@@ -232,7 +232,7 @@ function realTimeChartMulti() {
 
 		// define root hash arrow
 		svg.append("svg:defs").append("svg:marker")
-			.attr("id", "proposed-triangle")
+			.attr("id", "triangle")
 			.attr("refX", 3)
 			.attr("refY", 3)
 			.attr("markerWidth", 15)
@@ -498,6 +498,8 @@ function realTimeChartMulti() {
 					})
 					.attr("stroke", d => {
 						switch (d.status) {
+							case "finalized":
+							case "justified":
 							case "proposed":
 								return "white";
 							case "orphaned":
@@ -509,8 +511,10 @@ function realTimeChartMulti() {
 					.attr("fill", "transparent")
 					.attr("marker-end", d => {
 						switch (d.status) {
+							case "finalized":
+							case "justified":
 							case "proposed":
-								return "url(#proposed-triangle)";
+								return "url(#triangle)";
 							case "orphaned":
 								return "url(#orphaned-triangle)"
 							default:
@@ -747,22 +751,25 @@ function realTimeChartMulti() {
 				};
 
 				switch (d.status) {
-					case "missing":
+					case "missed":
 						content = `<text 
 							x="${getSlotWidth(d) / 2}"
 							y="${((y(d.category) / 4))}"
-							font-size="1.5em" 
+							font-size=".75em" 
 							text-anchor="middle"
 							dominant-baseline="middle"
 							fill="white"
 							opacity=".37"
 						>Missed</text>`;
 						break;
-					case "proposed": case "orphaned":	
+					case "finalized":
+					case "justified": 
+					case "proposed": 
+					case "orphaned":
 						content = `<text 
 							x="${offset}"
 							y="0"
-							font-size="1em" 
+							font-size=".75em" 
 							fill="white"
 							opacity="1"
 							dy="0"
@@ -843,7 +850,9 @@ function realTimeChartMulti() {
 			// there is a block
 			if (prevBlock) {
 				// ... and it is the parent block
-				if (prevBlock.status === "proposed") {
+				if (prevBlock.status === "finalized" ||
+					prevBlock.status === "justified" ||
+					prevBlock.status === "proposed") {
 					parentIndex = Math.round(x(prevBlock.time));
 					return parentIndex;
 				}

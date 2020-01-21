@@ -3,7 +3,7 @@
 /* 	-----------------------------------
 	Globals - Beacon Chain Config
 	----------------------------------- */
-const EPOCHS_AGO = 8;
+const EPOCHS_AGO = 4;
 const SLOTS_PER_EPOCH = 32;
 const SECONDS_PER_SLOT = 12;
 const SLOT_INTERVAL = SECONDS_PER_SLOT * 1000;
@@ -144,13 +144,14 @@ async function init() {
 							do {
 								difference--;
 								console.log(`%c                            ${counter}`, "color: orange");
-								let slot = {
+								let block = {
+									category: "Blocks",
 									epoch: calculateEpoch(counter),
 									slot: counter,
 									status: "missed",
 									time: calculateTime(counter),
 								}
-								// data.push(slot);
+								chart.datum(block);
 								counter++;
 							} while (difference > 1);
 						};
@@ -158,7 +159,6 @@ async function init() {
 					console.log("                           ", blockContainer.block.block.slot, "   |   ", base64toHEX(blockContainer.block.block.parentRoot).substr(2, 4), " / ", base64toHEX(blockContainer.blockRoot).substr(2, 4), "   |   ", parseInt((blockContainer.block.block.slot) % SLOTS_PER_EPOCH), "   |   ", calculateStatus(blockContainer.block.block.slot), "   |   ", calculateEpoch(blockContainer.block.block.slot));
 					let block = {
 						category: "Blocks",
-						size: 24,
 						epoch: calculateEpoch(blockContainer.block.block.slot),
 						slot: blockContainer.block.block.slot,
 						status: calculateStatus(blockContainer.block.block.slot),
