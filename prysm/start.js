@@ -183,7 +183,16 @@ async function init() {
 
 	// Poll for updates
 	let poller = setInterval(() => poll(), pollInterval);
+	let epochPoller = setInterval(epochPoll(), SLOTS_PER_EPOCH * SLOT_INTERVAL);
 
+	async function epochPoll() {
+		console.log("=========================== EPOCH POLL");
+		console.log("%cScheduled Epoch:           ", "font-weight: bold", status.scheduledEpoch);
+		status.scheduledEpoch = status.scheduledEpoch + 1;
+		console.log("%cNext Epoch:				   ", "font-weight: bold", status.scheduledEpoch);
+		chart.datum(createScheduledEpoch(status.scheduledEpoch));
+	}
+	
 	async function updateState() {
 		chainhead = await CHAINHEAD.getChainhead();
 		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
@@ -345,6 +354,15 @@ async function init() {
 		};
 	}
 
+	function createScheduledEpoch(epoch) {
+		return {
+			category: "Epochs",
+			time: calculateTimeFromEpoch(epoch),
+			label: epoch,
+			status: "scheduled"
+		};
+	}
+
 	function calculateCurrentState() {
 		let now = Math.floor((new Date()).getTime() / 1000);
 		let genesis = Math.floor(new Date(NETWORK_GENESIS_TIME).getTime() / 1000);
@@ -430,8 +448,12 @@ function checkEpochStatus(time) {
 
 	let status;
 
+	// future epoch
+	if (timeElapsed < 0) {
+		status = "scheduled";
+	}
 	// current epoch or 1 epoch ago
-	if (timeElapsed <= SECONDS_PER_SLOT * SLOTS_PER_EPOCH * 1000 * 2) {
+	else if (timeElapsed <= SECONDS_PER_SLOT * SLOTS_PER_EPOCH * 1000 * 2) {
 		status = "pending";
 	}
 	// 2 epochs ago
