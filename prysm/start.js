@@ -181,9 +181,12 @@ async function init() {
 	await getInitial();
 	await BLOCKS.getBlocksForPreviousEpochs(status.headEpoch);
 
+	status.scheduledEpoch = status.scheduledEpoch + 1;
+	chart.datum(createScheduledEpoch(status.scheduledEpoch));
+
 	// Poll for updates
 	let poller = setInterval(() => poll(), pollInterval);
-	let epochPoller = setInterval(epochPoll(), SLOTS_PER_EPOCH * SLOT_INTERVAL);
+	let epochPoller = setInterval(() => epochPoll(), SLOTS_PER_EPOCH * SLOT_INTERVAL);
 
 	async function epochPoll() {
 		console.log("=========================== EPOCH POLL");
@@ -313,16 +316,6 @@ async function init() {
 	async function poll() {
 		await getLatest();
 		// TODO: render chainhead, epoch, block, etc.
-	}
-
-	function base64toHEX(base64) {
-		let raw = atob(base64);
-		let hex = "0x";
-		for (let i = 0; i < raw.length; i++) {
-			let _hex = raw.charCodeAt(i).toString(16)
-			hex += (_hex.length == 2 ? _hex : "0" + _hex);
-		}
-		return hex;
 	}
 
 	function createBlock(slot) {
@@ -467,4 +460,14 @@ function checkEpochStatus(time) {
 	}
 
 	return status;
+}
+
+function base64toHEX(base64) {
+	let raw = atob(base64);
+	let hex = "0x";
+	for (let i = 0; i < raw.length; i++) {
+		let _hex = raw.charCodeAt(i).toString(16)
+		hex += (_hex.length == 2 ? _hex : "0" + _hex);
+	}
+	return hex;
 }
