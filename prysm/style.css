@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css?family=Barlow&display=swap');
+
+body {
+    font-family: "Barlow", Arial, Helvetica, sans-serif !important;
+    color: white;
+    background-color: #0f1927;
+}
+
+svg {
+    font-family: "Barlow", Arial, Helvetica, sans-serif;
+    color: white;
+}
+
+.layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 1440px;
+    height: 100vh;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.axis text {
+    font-family: "Barlow", Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    fill: white;
+}
+
+.chartTitle {
+    font-size: 12px;
+    font-weight: bold;
+    text-anchor: middle;
+    fill: white;
+}
+
+.axis .title {
+    font-weight: bold;
+    text-anchor: middle;
+    fill: black;
+    fill: white;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: white;;
+    shape-rendering: crispEdges;
+}
+
+.x.axis path {
+    fill: none;
+    stroke: white;
+    shape-rendering: crispEdges;
+}
+
+.nav .area {
+    fill: lightgrey;
+    stroke-width: 0px;
+}
+
+.nav .line {
+    fill: none;
+    stroke: darkgrey;
+    stroke-width: 1px;
+}
+
+.viewport {
+    stroke: #586a82;
+    fill: white;
+    fill-opacity: 0.1;
+}
+
+.viewport .extent,
+.viewport .selection {
+    fill: white;
+    fill-opacity: 0.2;
+}
+
+.viewport .overlay {
+    fill: rgba(0,0,0,.05);
+    stroke: none;
+}
+
+.viewport .selection {
+    fill: rgba(53,110,255,.37);
+}
+
+.viewport .handle--w,
+.viewport .handle--e {
+    stroke: none;
+    fill: white;
+    fill-opacity: .75;
+}
+
+#controls input {
+    margin-left: 24px;
+}
+
+#controls input:first-of-type {
+    margin-left: 0;
+}

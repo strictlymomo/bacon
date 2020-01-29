@@ -405,11 +405,6 @@ function realTimeChartMulti() {
 
 			let epochsData = data.filter(d => d.category === "Epochs");
 
-			// update epoch status
-			for (let epoch in epochsData) {
-				epochsData[epoch].status = checkEpochStatus(epochsData[epoch].time);
-			}
-
 			let updateEpochsSel = epochsG.selectAll(".bar")
 				.data(epochsData);
 
@@ -763,8 +758,8 @@ function realTimeChartMulti() {
 						>Missed</text>`;
 						break;
 					case "finalized":
-					case "justified": 
-					case "proposed": 
+					case "justified":
+					case "proposed":
 					case "orphaned":
 						content = `<text 
 							x="${offset}"
@@ -821,7 +816,7 @@ function realTimeChartMulti() {
 					break;
 				case "justified":
 					retVal = "rgba(54, 149, 141, .67)";
-					break;	
+					break;
 				case "proposed":
 					retVal = "rgba(54, 149, 141, .17)";
 					break;
@@ -1085,6 +1080,24 @@ function realTimeChartMulti() {
 	chart.showAttestations = function (_) {
 		if (arguments.length == 0) return showAttestations;
 		showAttestations = _;
+		return chart;
+	}
+
+	chart.update = function (store) {
+		for (const datum of data) {
+			switch (datum.category) {
+				case "Epochs":
+					if (datum.label >= store.nextEpochTransition) datum.status = "scheduled";
+					else if (datum.label < store.nextEpochTransition && datum.label > store.justifiedEpoch) datum.status = "pending";
+					else if (datum.label <= store.justifiedEpoch && datum.label > store.finalizedEpoch) datum.status = "justified";
+					else if (datum.label <= store.finalizedEpoch) datum.status = "finalized";
+				case "Blocks":
+					if (datum.status === "justified") 
+						if (datum.slot <= store.finalizedSlot) datum.status = "finalized";			
+					if (datum.status === "proposed") 
+						if (datum.slot > store.finalizedSlot && datum.slot <= store.justifiedSlot) datum.status = "justified";
+			}
+		}
 		return chart;
 	}
 

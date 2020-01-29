@@ -21,7 +21,6 @@ async function init() {
 		.xTitle("Time")
 		.yDomain([
 			"_",
-			// "Attestations",
 			"Blocks",
 			"Epochs",
 		])
@@ -116,9 +115,6 @@ async function init() {
 			const pe3 = headEpoch - 3;
 			let prevEpochs = [pe3, pe2, pe1, headEpoch];
 
-			console.log("prevEpochs:                ", prevEpochs);
-			console.log("%c                            GETTING BLOCKS FOR PREVIOUS EPOCHS", "color: gray");
-			console.log("                           ", "Slot", "    | ", "Parent", " / ", "Root", "   |   ", "Mod", "  |  ", "Status", "   |   ", "Epoch");
 			for (const epoch of prevEpochs) {
 
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
@@ -135,13 +131,11 @@ async function init() {
 							let counter = parseInt(prevSlot) + 1;
 							do {
 								difference--;
-								console.log(`%c                            ${counter}`, "color: orange");
 								chart.datum(createMissingBlock(counter));
 								counter++;
 							} while (difference > 1);
 						};
 					}
-					console.log("                           ", blockContainer.block.block.slot, "   |   ", base64toHEX(blockContainer.block.block.parentRoot).substr(2, 4), " / ", base64toHEX(blockContainer.blockRoot).substr(2, 4), "   |   ", parseInt((blockContainer.block.block.slot) % SLOTS_PER_EPOCH), "   |   ", calculateStatus(blockContainer.block.block.slot), "   |   ", calculateEpoch(blockContainer.block.block.slot));
 					chart.datum(createBlock(blockContainer.block.block.slot));
 				})
 			}
@@ -186,33 +180,23 @@ async function init() {
 	let epochPoller = setInterval(() => epochPoll(), SLOTS_PER_EPOCH * SLOT_INTERVAL);
 
 	async function epochPoll() {
-		console.log("=========================== EPOCH POLL");
-		console.log("%cScheduled Epoch:           ", "font-weight: bold", store.scheduledEpoch);
 		store.scheduledEpoch = store.scheduledEpoch + 1;
-		console.log("%cNext Epoch:				   ", "font-weight: bold", store.scheduledEpoch);
 		chart.datum(createScheduledEpoch(store.scheduledEpoch));
 	}
 	
 	async function updateStatusFromChainhead() {
-		console.log("=========================== UPDATING STATUS FROM CHAINHEAD");
-		
 		chainhead = await CHAINHEAD.getChainhead();
-		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
 
 		store.finalizedSlot = parseInt(chainhead.finalizedSlot);
 		store.finalizedEpoch = parseInt(chainhead.finalizedEpoch);
-		console.log("%cFinalized Slot | Epoch:    ", "font-weight: bold", store.finalizedSlot, "|", store.finalizedEpoch);
 
 		store.justifiedSlot = parseInt(chainhead.justifiedSlot);
 		store.justifiedEpoch = parseInt(chainhead.justifiedEpoch);
-		console.log("%cJustified Slot | Epoch:    ", "font-weight: bold", store.justifiedSlot, "|", store.justifiedEpoch);
 
 		store.headSlot = parseInt(chainhead.headSlot);
 		store.headEpoch = parseInt(chainhead.headEpoch);
-		console.log("%cHead Slot | Epoch:         ", "font-weight: bold", store.headSlot, "|", store.headEpoch);
 
 		store.nextEpochTransition = store.headEpoch + 1;
-		console.log("%cEpoch Transition in:   	   ", "font-weight: bold", store.nextEpochTransition * SLOTS_PER_EPOCH - store.headSlot, "slots ->", store.nextEpochTransition);
 	}
 
 	async function getInitial() {
@@ -226,12 +210,6 @@ async function init() {
 		// Get Block
 		store.currentBlock = await BLOCKS.getBlock(store.headSlot)
 
-		if (store.currentBlock) {
-			console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(store.currentBlock.blockRoot));
-		} else {
-			console.log("No block");
-		}
-
 		await BLOCKS.getBlocksForPreviousEpochs(store.headEpoch);
 
 		store.scheduledEpoch = store.scheduledEpoch + 1;
@@ -242,8 +220,6 @@ async function init() {
 
 	async function getLatest() {
 
-		console.log("===========================");
-
 		// Update previous
 		store.previousSlot = store.headSlot;
 		store.previousBlockRoot = store.headBlockRoot;
@@ -251,42 +227,30 @@ async function init() {
 		// Get Current Slot
 		store.headSlot = await CHAINHEAD.getHeadSlot();
 
-		console.log("%cPrev Slot:                 ", "font-weight: bold", store.previousSlot);
-		console.log("%cHead Slot:                 ", "font-weight: bold", store.headSlot);
-
 		// Compare
 		let difference = store.headSlot - store.previousSlot;
-		console.log("%cDifference:                ", "font-weight: bold", difference);
 
 		if (difference === 0) {
-			console.log("%c                            CLIENT IS NOT UP TO DATE. SLEEP ANOTHER INTERVAL", "color: orange");
-
 			// TODO: SPEED UP THE POLLER TO CHECK FOR NEW SLOT FASTER SO WE DON'T LAG
 			return;
 
 		} else if (difference > 1) {
-			console.log("%c                            GAP - COULD BE MISSING SLOTS... LET'S CHECK.", "color: red");
 
 			let prev = store.previousSlot;
 
 			do {
-				console.log("GET:                       ", (prev + 1));
 				store.gapBlock = await BLOCKS.getBlock(prev + 1);
 
 				if (store.gapBlock) {
-					console.log("block ?                    ", store.gapBlock);
-					console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(store.gapBlock.blockRoot));
 					chart.datum(createBlock(store.gapBlock.block.block.slot));
 				} else if (store.gapBlock === null){
 					// block is missing
-					console.log("block ?                    ", store.gapBlock);
 					chart.datum(createMissingBlock(prev + 1));
 				}
 
 				// Update Statuses
 				if ((prev + 1) % SLOTS_PER_EPOCH === 0) {
 					await updateStatusFromChainhead();
-					console.log("let's update the statuses");
 					chart.update(store);
 					store.scheduledEpoch = store.scheduledEpoch + 1;
 					chart.datum(createScheduledEpoch(store.scheduledEpoch));
@@ -296,44 +260,31 @@ async function init() {
 				prev++;
 			} while (difference > 1);
 
-			console.log("%c                            CAUGHT UP - GETTING NEXT BLOCK...", "color: green");
-
 			store.previousBlockRoot = base64toHEX(store.currentBlock.blockRoot);
-			console.log("%cPrev  Root:                ", "font-weight: bold", store.previousBlockRoot);
 
 			// Get Block
 			store.currentBlock = await BLOCKS.getBlock(store.headSlot);
 			if (store.currentBlock) {
-				console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(store.currentBlock.blockRoot));
 				chart.datum(createBlock(store.currentBlock.block.block.slot));
 			} else if (store.currentBlock === null) {
-				console.log("No block");
 				chart.datum(createMissingBlock(store.headSlot));
 			}
 
-			console.log("%cheadSlot:				   ", "font-weight: bold", store.headSlot);
-
 		} else if (difference === 1) {
-			console.log("%c                            GOOD - GETTING NEXT BLOCK...", "color: green");
 
 			store.previousBlockRoot = base64toHEX(store.currentBlock.blockRoot);
-			console.log("%cPrev  Root:                ", "font-weight: bold", store.previousBlockRoot);
 
 			// Get Block
 			store.currentBlock = await BLOCKS.getBlock(store.headSlot);
 			if (store.currentBlock) {
-				console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(store.currentBlock.blockRoot));
 				chart.datum(createBlock(store.currentBlock.block.block.slot));
 			} else if (store.currentBlock === null) {
-				console.log("No block");
 				chart.datum(createMissingBlock(store.headSlot));
 			}
 
 			// Update Statuses
-			console.log("%cEpoch Transition in:   	   ", "font-weight: bold", store.nextEpochTransition * SLOTS_PER_EPOCH - store.headSlot, "slots ->", store.nextEpochTransition);
 			if (store.headSlot % SLOTS_PER_EPOCH === 0) {
 				await updateStatusFromChainhead();
-				console.log("let's update the statuses");
 				chart.update(store);
 				store.scheduledEpoch = store.scheduledEpoch + 1;
 				chart.datum(createScheduledEpoch(store.scheduledEpoch));
@@ -389,7 +340,6 @@ async function init() {
 
 		store.scheduledSlot = Math.floor((now - genesis) / 12);
 		store.scheduledEpoch = Math.floor(store.scheduledSlot / 32);
-		console.log("%cScheduled Slot | Epoch:    ", "font-weight: bold", store.scheduledSlot, "|", store.scheduledEpoch);
 	}
 
 	function calculateTime(slot) {
