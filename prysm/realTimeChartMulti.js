@@ -718,7 +718,7 @@ function realTimeChartMulti() {
 					></line>`
 			}
 
-			if (getSlotWidth(d) > 25) {
+			if (getSlotWidth(d) > 25 || d.slot % 32 === 0) {
 				text = `
 					<text 
 						x="${offset}"
