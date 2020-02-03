@@ -718,7 +718,7 @@ function realTimeChartMulti() {
 					></line>`
 			}
 
-			if (getSlotWidth(d) > 25 || d.slot % 32 === 0) {
+			if (getSlotWidth(d) > 35 || d.slot % 32 === 0) {
 				text = `
 					<text 
 						x="${offset}"
@@ -727,7 +727,7 @@ function realTimeChartMulti() {
 						fill="white"
 						opacity=".73"
 						${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
-					>${d.slot}</text>`
+					>${d.slot}</text>`	
 			}
 
 			if (getSlotWidth(d) > 100) {

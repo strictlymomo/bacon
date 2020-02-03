@@ -151,6 +151,11 @@ async function init() {
 	let chainhead = {};
 
 	let store = {
+		
+		// current
+		currentSlot: null,
+		currentEpoch: null,
+
 		// scheduled
 		scheduledSlot: null,
 		scheduledEpoch: null,
@@ -188,7 +193,6 @@ async function init() {
 	async function epochPoll() {
 		console.log("=========================== EPOCH POLL");
 		console.log("%cScheduled Epoch:           ", "font-weight: bold", store.scheduledEpoch);
-		store.scheduledEpoch = store.scheduledEpoch + 1;
 		console.log("%cNext Epoch:				   ", "font-weight: bold", store.scheduledEpoch);
 		chart.datum(createScheduledEpoch(store.scheduledEpoch));
 	}
@@ -217,7 +221,8 @@ async function init() {
 
 	async function getInitial() {
 
-		setScheduledState();
+		setNetworkState();
+		console.log("%cCurrent Slot | Epoch:      ", "font-weight: bold", store.currentSlot, "|", store.currentEpoch);
 
 		await updateStatusFromChainhead();
 
@@ -233,14 +238,16 @@ async function init() {
 		}
 
 		await BLOCKS.getBlocksForPreviousEpochs(store.headEpoch);
-
-		store.scheduledEpoch = store.scheduledEpoch + 1;
 		chart.datum(createScheduledEpoch(store.scheduledEpoch));
-
 		chart.update(store);
+		updateStatusTemplate();
 	}
 
 	async function getLatest() {
+		
+		setNetworkState();
+		await updateStatusFromChainhead();
+		updateStatusTemplate();
 
 		console.log("===========================");
 
@@ -288,7 +295,7 @@ async function init() {
 					await updateStatusFromChainhead();
 					console.log("let's update the statuses");
 					chart.update(store);
-					store.scheduledEpoch = store.scheduledEpoch + 1;
+					updateStatusTemplate();
 					chart.datum(createScheduledEpoch(store.scheduledEpoch));
 				}
 				
@@ -335,7 +342,7 @@ async function init() {
 				await updateStatusFromChainhead();
 				console.log("let's update the statuses");
 				chart.update(store);
-				store.scheduledEpoch = store.scheduledEpoch + 1;
+				updateStatusTemplate();
 				chart.datum(createScheduledEpoch(store.scheduledEpoch));
 			}
 		}
@@ -383,13 +390,13 @@ async function init() {
 		};
 	}
 
-	function setScheduledState() {
+	function setNetworkState() {
 		let now = Math.floor((new Date()).getTime() / 1000);
 		let genesis = Math.floor(new Date(NETWORK_GENESIS_TIME).getTime() / 1000);
 
-		store.scheduledSlot = Math.floor((now - genesis) / 12);
-		store.scheduledEpoch = Math.floor(store.scheduledSlot / 32);
-		console.log("%cScheduled Slot | Epoch:    ", "font-weight: bold", store.scheduledSlot, "|", store.scheduledEpoch);
+		store.currentSlot = Math.floor((now - genesis) / 12);
+		store.currentEpoch = Math.floor(store.currentSlot / 32);
+		store.scheduledEpoch = store.currentEpoch + 1;
 	}
 
 	function calculateTime(slot) {
@@ -453,6 +460,42 @@ async function init() {
 			chart.halt(state);
 		}
 	}
+
+	function updateStatusTemplate() {
+		let data = [store];
+		d3.selectAll("#current-slot").data(data).text(d => d.currentSlot);
+		d3.selectAll("#current-epoch").data(data).text(d => d.currentEpoch);
+		d3.selectAll("#head-slot").data(data).text(d => d.headSlot);
+		d3.selectAll("#head-epoch").data(data).text(d => d.headEpoch);
+		d3.selectAll("#head-delta").data(data).text(d => calculateEpochDelta(d.currentEpoch, d.headEpoch, "head"));
+		d3.selectAll("#justified-slot").data(data).text(d => d.justifiedSlot);
+		d3.selectAll("#justified-epoch").data(data).text(d => d.justifiedEpoch);
+		d3.selectAll("#justified-delta").data(data).text(d => calculateEpochDelta(d.currentEpoch, d.justifiedEpoch, "justified"));
+		d3.selectAll("#finalized-slot").data(data).text(d => d.finalizedSlot);
+		d3.selectAll("#finalized-epoch").data(data).text(d => d.finalizedEpoch);
+		d3.selectAll("#finalized-delta").data(data).text(d => calculateEpochDelta(d.currentEpoch, d.finalizedEpoch, "finalized"));
+		d3.selectAll("#transition-countdown-slot").data(data).text(d => d.scheduledEpoch * SLOTS_PER_EPOCH - d.currentSlot);
+	}
+
+	function calculateEpochDelta(cur, val, type) {
+		let msg = "in sync";
+		let delta = cur - val;
+		switch (type) {
+			case "head":
+				if (delta > 1) msg = `${delta} epochs behind`;
+				break;
+			case "justified":
+				if (delta  > 2) msg = `${delta} checkpoints behind`;
+				break;
+			case "finalized":
+				if (delta  > 3) msg = `${delta} checkpoints behind`;
+				break;
+			default:
+				break;	
+		}
+		return msg;
+	}
+
 
 } // end init function
 

@@ -1,9 +1,41 @@
 @import url('https://fonts.googleapis.com/css?family=Barlow&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
 
 body {
     font-family: "Barlow", Arial, Helvetica, sans-serif !important;
     color: white;
     background-color: #0f1927;
+}
+
+#status {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 30px;
+}
+
+.status-divider {
+    margin: 10px 0;
+}
+
+.header-label {
+    display: inline-block;
+    width: 200px;
+}
+.status-label {
+    display: inline-block;
+    width: 100px;
+}
+
+.epoch-label, .slot-label, .delta-label {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    display: inline-block;
+    text-align: end;
+    min-width: 50px;
+}
+
+.delta-label {
+    width: 200px;
 }
 
 svg {
@@ -98,4 +130,12 @@ svg {
 
 #controls input:first-of-type {
     margin-left: 0;
+}
+
+.text-grey-600 {
+    color: #586a82;
+}
+
+.font-semibold {
+    font-weight: 600;
 }
