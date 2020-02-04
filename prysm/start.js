@@ -197,31 +197,9 @@ async function init() {
 		chart.datum(createScheduledEpoch(store.scheduledEpoch));
 	}
 	
-	async function updateStatusFromChainhead() {
-		console.log("=========================== UPDATING STATUS FROM CHAINHEAD");
-		
-		chainhead = await CHAINHEAD.getChainhead();
-		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
-
-		store.finalizedSlot = parseInt(chainhead.finalizedSlot);
-		store.finalizedEpoch = parseInt(chainhead.finalizedEpoch);
-		console.log("%cFinalized Slot | Epoch:    ", "font-weight: bold", store.finalizedSlot, "|", store.finalizedEpoch);
-
-		store.justifiedSlot = parseInt(chainhead.justifiedSlot);
-		store.justifiedEpoch = parseInt(chainhead.justifiedEpoch);
-		console.log("%cJustified Slot | Epoch:    ", "font-weight: bold", store.justifiedSlot, "|", store.justifiedEpoch);
-
-		store.headSlot = parseInt(chainhead.headSlot);
-		store.headEpoch = parseInt(chainhead.headEpoch);
-		console.log("%cHead Slot | Epoch:         ", "font-weight: bold", store.headSlot, "|", store.headEpoch);
-
-		store.nextEpochTransition = store.headEpoch + 1;
-		console.log("%cEpoch Transition in:   	   ", "font-weight: bold", store.nextEpochTransition * SLOTS_PER_EPOCH - store.headSlot, "slots ->", store.nextEpochTransition);
-	}
-
 	async function getInitial() {
 
-		setNetworkState();
+		setStateFromGenesis();
 		console.log("%cCurrent Slot | Epoch:      ", "font-weight: bold", store.currentSlot, "|", store.currentEpoch);
 
 		await updateStatusFromChainhead();
@@ -244,19 +222,18 @@ async function init() {
 	}
 
 	async function getLatest() {
-		
-		setNetworkState();
-		await updateStatusFromChainhead();
-		updateStatusTemplate();
 
 		console.log("===========================");
+
+		setStateFromGenesis();
 
 		// Update previous
 		store.previousSlot = store.headSlot;
 		store.previousBlockRoot = store.headBlockRoot;
 
 		// Get Current Slot
-		store.headSlot = await CHAINHEAD.getHeadSlot();
+		// store.headSlot = await CHAINHEAD.getHeadSlot();
+		await updateStatusFromChainhead();
 
 		console.log("%cPrev Slot:                 ", "font-weight: bold", store.previousSlot);
 		console.log("%cHead Slot:                 ", "font-weight: bold", store.headSlot);
@@ -346,10 +323,34 @@ async function init() {
 				chart.datum(createScheduledEpoch(store.scheduledEpoch));
 			}
 		}
+
+		// updateStatusTemplate();
 	}
 
 	async function poll() {
 		await getLatest();
+	}
+
+	async function updateStatusFromChainhead() {
+		console.log("=========================== UPDATING STATUS FROM CHAINHEAD");
+		
+		chainhead = await CHAINHEAD.getChainhead();
+		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
+
+		store.finalizedSlot = parseInt(chainhead.finalizedSlot);
+		store.finalizedEpoch = parseInt(chainhead.finalizedEpoch);
+		console.log("%cFinalized Slot | Epoch:    ", "font-weight: bold", store.finalizedSlot, "|", store.finalizedEpoch);
+
+		store.justifiedSlot = parseInt(chainhead.justifiedSlot);
+		store.justifiedEpoch = parseInt(chainhead.justifiedEpoch);
+		console.log("%cJustified Slot | Epoch:    ", "font-weight: bold", store.justifiedSlot, "|", store.justifiedEpoch);
+
+		store.headSlot = parseInt(chainhead.headSlot);
+		store.headEpoch = parseInt(chainhead.headEpoch);
+		console.log("%cHead Slot | Epoch:         ", "font-weight: bold", store.headSlot, "|", store.headEpoch);
+
+		store.nextEpochTransition = store.headEpoch + 1;
+		console.log("%cEpoch Transition in:   	   ", "font-weight: bold", store.nextEpochTransition * SLOTS_PER_EPOCH - store.headSlot, "slots ->", store.nextEpochTransition);
 	}
 
 	function createBlock(slot) {
@@ -390,7 +391,7 @@ async function init() {
 		};
 	}
 
-	function setNetworkState() {
+	function setStateFromGenesis() {
 		let now = Math.floor((new Date()).getTime() / 1000);
 		let genesis = Math.floor(new Date(NETWORK_GENESIS_TIME).getTime() / 1000);
 
