@@ -118,6 +118,7 @@ svg {
 .viewport .selection {
     fill: white;
     fill-opacity: 0.2;
+    stroke: #586a82 !important;
 }
 
 .viewport .overlay {

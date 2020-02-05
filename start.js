@@ -3,12 +3,13 @@
 /* 	-----------------------------------
 	Globals - Beacon Chain Config
 	----------------------------------- */
-const EPOCHS_AGO = 4;
 const SLOTS_PER_EPOCH = 32;
 const SECONDS_PER_SLOT = 12;
 const SLOT_INTERVAL = SECONDS_PER_SLOT * 1000;
-let maxSeconds = (EPOCHS_AGO * SLOTS_PER_EPOCH * SECONDS_PER_SLOT) + (1 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT);
 const ACTIVE_VALIDATOR_SET = 1000;
+
+let epochsAgo = 4;
+let maxSeconds = getMaxSeconds(epochsAgo);
 
 async function init() {
 
@@ -102,16 +103,18 @@ async function init() {
 				.then(response => response.json())
 				.then(d => d.blockContainers);
 		},
-		getBlocksForPreviousEpochs: async function (headEpoch) {
+		getBlocksForPreviousEpochs: async function (headEpoch, finalizedEpoch) {
 			let blockContainersInPrevEpochs = [];
-			const pe1 = headEpoch - 1;
-			const pe2 = headEpoch - 2;
-			const pe3 = headEpoch - 3;
-			let prevEpochs = [pe3, pe2, pe1, headEpoch];
+			let prevEpochs = enumeratePreviousEpochs(headEpoch, finalizedEpoch - 2);
 
 			console.log("prevEpochs:                ", prevEpochs);
 			console.log("%c                            GETTING BLOCKS FOR PREVIOUS EPOCHS", "color: gray");
 			console.log("                           ", "Slot", "    | ", "Parent", " / ", "Root", "   |   ", "Mod", "  |  ", "Status", "   |   ", "Epoch");
+			
+			epochsAgo = prevEpochs.length;
+			maxSeconds = getMaxSeconds(epochsAgo);
+			// chart.maxSeconds(maxSeconds);
+
 			for (const epoch of prevEpochs) {
 
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
@@ -208,7 +211,7 @@ async function init() {
 			console.log("No block");
 		}
 
-		await BLOCKS.getBlocksForPreviousEpochs(store.headEpoch);
+		await BLOCKS.getBlocksForPreviousEpochs(store.headEpoch, store.finalizedEpoch);
 		chart.datum(createScheduledEpoch(store.scheduledEpoch));
 		chart.update(store);
 		updateStatusTemplate();
@@ -489,6 +492,9 @@ async function init() {
 		return msg;
 	}
 
+	function enumeratePreviousEpochs(max, min) {
+		return Array.apply(null, {length: max + 1}).map(Number.call, Number).slice(min);
+	}
 
 } // end init function
 
@@ -506,4 +512,8 @@ function base64toHEX(base64) {
 		hex += (_hex.length == 2 ? _hex : "0" + _hex);
 	}
 	return hex;
+}
+
+function getMaxSeconds(epochsAgo) {
+	return (epochsAgo * SLOTS_PER_EPOCH * SECONDS_PER_SLOT) + (1 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT);
 }
