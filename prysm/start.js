@@ -17,7 +17,6 @@ async function init() {
 		----------------------------------- */
 
 	let chart = realTimeChartMulti()
-		.title("Beacon Chain")
 		.xTitle("Time")
 		.yDomain([
 			"_",

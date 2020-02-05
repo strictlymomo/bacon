@@ -6,8 +6,8 @@ function realTimeChartMulti() {
 		maxSeconds, pixelsPerSecond = 10,
 		svgWidth = 700, svgHeight = 300,
 		margin = { top: 20, bottom: 20, left: 100, right: 30, topNav: 10, bottomNav: 20 },
-		dimension = { chartTitle: 20, xAxis: 20, yAxis: 20, xTitle: 20, yTitle: 20, navChart: 70 },
-		chartTitle, yTitle, xTitle,
+		dimension = { xAxis: 20, yAxis: 20, xTitle: 20, yTitle: 20, navChart: 70 },
+		yTitle, xTitle,
 		drawXAxis = true, drawYAxis = true, drawNavChart = true,
 		border,
 		selection,
@@ -40,7 +40,6 @@ function realTimeChartMulti() {
 		};
 
 		// process titles
-		chartTitle = chartTitle || "";
 		xTitle = xTitle || "";
 		yTitle = yTitle || "";
 		backgroundColor = backgroundColor || "#0f1927";
@@ -50,16 +49,15 @@ function realTimeChartMulti() {
 		headSlotTimeOffset = headSlotTimeOffset || 0;
 
 		// compute component dimensions
-		let chartTitleDim = chartTitle == "" ? 0 : dimension.chartTitle,
-			xTitleDim = xTitle == "" ? 0 : dimension.xTitle,
+		let xTitleDim = xTitle == "" ? 0 : dimension.xTitle,
 			yTitleDim = yTitle == "" ? 0 : dimension.yTitle,
 			xAxisDim = !drawXAxis ? 0 : dimension.xAxis,
 			yAxisDim = !drawYAxis ? 0 : dimension.yAxis,
 			navChartDim = !drawNavChart ? 0 : dimension.navChart;
 
 		// compute dimension of main and nav charts, and offsets
-		let marginTop = margin.top + chartTitleDim;
-		height = svgHeight - marginTop - margin.bottom - chartTitleDim - xTitleDim - xAxisDim - navChartDim + 30;
+		let marginTop = margin.top;
+		height = svgHeight - marginTop - margin.bottom - xTitleDim - xAxisDim - navChartDim + 15;
 		heightNav = navChartDim - margin.topNav - margin.bottomNav;
 		let marginTopNav = svgHeight - margin.bottom - heightNav - margin.topNav;
 		width = svgWidth - margin.left - margin.right;
@@ -126,14 +124,6 @@ function realTimeChartMulti() {
 			.attr("y", -margin.left + 15) //-35
 			.attr("dy", ".71em")
 			.text(() => (yTitle === undefined) ? "" : yTitle);
-
-		// in main group, add chart title
-		main.append("text")
-			.attr("class", "chartTitle")
-			.attr("x", width / 2)
-			.attr("y", -20)
-			.attr("dy", ".71em")
-			.text(() => (chartTitle === undefined) ? "" : chartTitle);
 
 		// define main chart scales
 		x = d3.scaleTime().range([0, width]);
@@ -991,13 +981,6 @@ function realTimeChartMulti() {
 		return chart;
 	}
 
-	// chart title
-	chart.title = function (_) {
-		if (arguments.length == 0) return chartTitle;
-		chartTitle = _;
-		return chart;
-	}
-
 	// x axis title
 	chart.xTitle = function (_) {
 		if (arguments.length == 0) return xTitle;
@@ -1103,4 +1086,4 @@ function realTimeChartMulti() {
 
 	return chart;
 
-} // end realTimeChart function
+} // end realTimeChart functionslac

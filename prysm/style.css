@@ -10,7 +10,7 @@ body {
 #status {
     display: flex;
     justify-content: flex-end;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
 }
 
 .status-divider {
