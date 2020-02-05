@@ -3,7 +3,7 @@
 /* 	-----------------------------------
 	Globals - Beacon Chain Config
 	----------------------------------- */
-const EPOCHS_AGO = 6;
+const EPOCHS_AGO = 4;
 const SLOTS_PER_EPOCH = 32;
 const SECONDS_PER_SLOT = 12;
 const SLOT_INTERVAL = SECONDS_PER_SLOT * 1000;
@@ -87,13 +87,7 @@ async function init() {
 				.then(response => response.json())
 				.then(d => d);
 			return chainhead;
-		},
-		getHeadSlot: async function () {
-			return parseInt((await this.getChainhead()).headSlot);
-		},
-		getHeadEpoch: async function () {
-			return parseInt((await this.getChainhead()).headEpoch);
-		},
+		}
 	}
 
 	const BLOCKS = {
@@ -231,8 +225,7 @@ async function init() {
 		store.previousSlot = store.headSlot;
 		store.previousBlockRoot = store.headBlockRoot;
 
-		// Get Current Slot
-		// store.headSlot = await CHAINHEAD.getHeadSlot();
+		// Get Current Chainhead
 		await updateStatusFromChainhead();
 
 		console.log("%cPrev Slot:                 ", "font-weight: bold", store.previousSlot);
@@ -324,7 +317,7 @@ async function init() {
 			}
 		}
 
-		// updateStatusTemplate();
+		updateStatusTemplate();
 	}
 
 	async function poll() {
