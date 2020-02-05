@@ -4,8 +4,6 @@
 <head>
 	<meta charset="utf-8">
 	<title>Beacon Chain Visualizer</title>
-	<link rel=stylesheet type=text/css
-		href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css">
 	<link rel=stylesheet type=text/css href="style.css">
 
 <body>
@@ -14,24 +12,22 @@
 		<div>
 			<div id="status">
 				<div>
-					<div class="status-container">
+					<div class="status-container border-bottom">
 						<div class="header-label"></div>
 						<div class="status-label"></div>
-						<div class="slot-label">Slot</div>
-						<div class="epoch-label">Epoch</div>
+						<div class="slot-header">Slot</div>
+						<div class="epoch-header">Epoch</div>
 						<div class="delta-label"></div>
 					</div>
-					<hr class="status-divider">
-					<div class="status-container">
-						<div class="header-label">Prysm Testnet</div>
+					<div class="status-container border-bottom">
+						<div class="header-label"><a href="https://prylabs.net/">Prysm Testnet</a></div>
 						<div class="status-label">Current</div>
 						<div class="slot-label" id="current-slot"></div>
 						<div class="epoch-label" id="current-epoch"></div> 
 						<div class="delta-label"></div>
 					</div>
-					<hr class="status-divider">
 					<div class="status-container">
-						<div class="header-label">Prysm API Node</div>
+						<div class="header-label"><a href="https://api.prylabs.net/">Prysm API Node</a></div>
 						<div class="status-label">Head</div>
 						<div class="slot-label" id="head-slot"></div>
 						<div class="epoch-label" id="head-epoch"></div>
@@ -44,14 +40,13 @@
 						<div class="epoch-label" id="justified-epoch"></div>
 						<div class="delta-label"  id="justified-delta"></div>
 					</div>
-					<div class="status-container">
+					<div class="status-container border-bottom">
 						<div class="header-label"></div>
 						<div class="status-label">Finalized</div>
 						<div class="slot-label" id="finalized-slot"></div>
 						<div class="epoch-label" id="finalized-epoch"></div>
 						<div class="delta-label" id="finalized-delta"></div>
 					</div>
-					<hr class="status-divider">
 					<div class="status-container">
 						<div class="header-label">Next Epoch Transition in</div>
 						<div class="status-label"></div>

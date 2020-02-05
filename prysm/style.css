@@ -3,14 +3,27 @@
 
 body {
     font-family: "Barlow", Arial, Helvetica, sans-serif !important;
-    color: white;
+    color: #586a82;
     background-color: #0f1927;
+    font-weight: 600;
 }
 
 #status {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 40px;
+    font-size: 13px;
+}
+
+#status a {
+    color: #586a82;
+    text-decoration: underline;
+}
+
+.border-bottom {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #586a82;
 }
 
 .status-divider {
@@ -29,6 +42,12 @@ body {
 .epoch-label, .slot-label, .delta-label {
     font-family: 'Roboto Mono', monospace;
     font-size: 12px;
+    display: inline-block;
+    text-align: end;
+    min-width: 50px;
+}
+
+.epoch-header, .slot-header{
     display: inline-block;
     text-align: end;
     min-width: 50px;
@@ -56,13 +75,6 @@ svg {
 .axis text {
     font-family: "Barlow", Arial, Helvetica, sans-serif;
     font-size: 10px;
-    fill: white;
-}
-
-.chartTitle {
-    font-size: 12px;
-    font-weight: bold;
-    text-anchor: middle;
     fill: white;
 }
 
