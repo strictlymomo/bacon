@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Beacon Chain Visualizer</title>
+	<link rel=stylesheet type=text/css
+		href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css">
+	<link rel=stylesheet type=text/css href="style.css">
+
+<body>
+
+	<div class="layout">
+		<div>
+			<div id="viewDiv"></div>
+			<div id="controls">
+				<input id="debug" type="checkbox" name="debug" value="debug" style="margin-bottom: 10px" /> Debug
+				<input id="halt" type="checkbox" name="halt" value="halt" style="margin-bottom: 10px" /> <span>Halt</span> (spacebar)
+				<input id="show-roots" type="checkbox" name="showRoots" value="showRoots" style="margin-bottom: 10px" /> Show Block Roots
+				<input id="show-proposers" type="checkbox" name="showProposers" value="showProposers" style="margin-bottom: 10px" /> Show Proposers
+				<input id="show-attestations" type="checkbox" name="showAttestations" value="showAttestations" style="margin-bottom: 10px" /> Show Attestations
+			</div>
+		</div>
+	</div>
+
+	<script src="https://d3js.org/d3.v5.min.js"></script>
+	<script src="realTimeChartMulti.js"></script>
+	<script src="start.js"></script>
+	

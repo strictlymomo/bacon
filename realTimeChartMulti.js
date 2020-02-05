@@ -6,8 +6,8 @@ function realTimeChartMulti() {
 		maxSeconds, pixelsPerSecond = 10,
 		svgWidth = 700, svgHeight = 300,
 		margin = { top: 20, bottom: 20, left: 100, right: 30, topNav: 10, bottomNav: 20 },
-		dimension = { chartTitle: 20, xAxis: 20, yAxis: 20, xTitle: 20, yTitle: 20, navChart: 70 },
-		chartTitle, yTitle, xTitle,
+		dimension = { xAxis: 20, yAxis: 20, xTitle: 20, yTitle: 20, navChart: 70 },
+		yTitle, xTitle,
 		drawXAxis = true, drawYAxis = true, drawNavChart = true,
 		border,
 		selection,
@@ -40,7 +40,6 @@ function realTimeChartMulti() {
 		};
 
 		// process titles
-		chartTitle = chartTitle || "";
 		xTitle = xTitle || "";
 		yTitle = yTitle || "";
 		backgroundColor = backgroundColor || "#0f1927";
@@ -50,16 +49,15 @@ function realTimeChartMulti() {
 		headSlotTimeOffset = headSlotTimeOffset || 0;
 
 		// compute component dimensions
-		let chartTitleDim = chartTitle == "" ? 0 : dimension.chartTitle,
-			xTitleDim = xTitle == "" ? 0 : dimension.xTitle,
+		let xTitleDim = xTitle == "" ? 0 : dimension.xTitle,
 			yTitleDim = yTitle == "" ? 0 : dimension.yTitle,
 			xAxisDim = !drawXAxis ? 0 : dimension.xAxis,
 			yAxisDim = !drawYAxis ? 0 : dimension.yAxis,
 			navChartDim = !drawNavChart ? 0 : dimension.navChart;
 
 		// compute dimension of main and nav charts, and offsets
-		let marginTop = margin.top + chartTitleDim;
-		height = svgHeight - marginTop - margin.bottom - chartTitleDim - xTitleDim - xAxisDim - navChartDim + 30;
+		let marginTop = margin.top;
+		height = svgHeight - marginTop - margin.bottom - xTitleDim - xAxisDim - navChartDim + 15;
 		heightNav = navChartDim - margin.topNav - margin.bottomNav;
 		let marginTopNav = svgHeight - margin.bottom - heightNav - margin.topNav;
 		width = svgWidth - margin.left - margin.right;
@@ -126,14 +124,6 @@ function realTimeChartMulti() {
 			.attr("y", -margin.left + 15) //-35
 			.attr("dy", ".71em")
 			.text(() => (yTitle === undefined) ? "" : yTitle);
-
-		// in main group, add chart title
-		main.append("text")
-			.attr("class", "chartTitle")
-			.attr("x", width / 2)
-			.attr("y", -20)
-			.attr("dy", ".71em")
-			.text(() => (chartTitle === undefined) ? "" : chartTitle);
 
 		// define main chart scales
 		x = d3.scaleTime().range([0, width]);
@@ -232,7 +222,7 @@ function realTimeChartMulti() {
 
 		// define root hash arrow
 		svg.append("svg:defs").append("svg:marker")
-			.attr("id", "proposed-triangle")
+			.attr("id", "triangle")
 			.attr("refX", 3)
 			.attr("refY", 3)
 			.attr("markerWidth", 15)
@@ -405,11 +395,6 @@ function realTimeChartMulti() {
 
 			let epochsData = data.filter(d => d.category === "Epochs");
 
-			// update epoch status
-			for (let epoch in epochsData) {
-				epochsData[epoch].status = checkEpochStatus(epochsData[epoch].time);
-			}
-
 			let updateEpochsSel = epochsG.selectAll(".bar")
 				.data(epochsData);
 
@@ -498,6 +483,8 @@ function realTimeChartMulti() {
 					})
 					.attr("stroke", d => {
 						switch (d.status) {
+							case "finalized":
+							case "justified":
 							case "proposed":
 								return "white";
 							case "orphaned":
@@ -509,8 +496,10 @@ function realTimeChartMulti() {
 					.attr("fill", "transparent")
 					.attr("marker-end", d => {
 						switch (d.status) {
+							case "finalized":
+							case "justified":
 							case "proposed":
-								return "url(#proposed-triangle)";
+								return "url(#triangle)";
 							case "orphaned":
 								return "url(#orphaned-triangle)"
 							default:
@@ -719,7 +708,7 @@ function realTimeChartMulti() {
 					></line>`
 			}
 
-			if (getSlotWidth(d) > 25) {
+			if (getSlotWidth(d) > 35 || d.slot % 32 === 0) {
 				text = `
 					<text 
 						x="${offset}"
@@ -728,7 +717,7 @@ function realTimeChartMulti() {
 						fill="white"
 						opacity=".73"
 						${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
-					>${d.slot}</text>`
+					>${d.slot}</text>`	
 			}
 
 			if (getSlotWidth(d) > 100) {
@@ -747,22 +736,25 @@ function realTimeChartMulti() {
 				};
 
 				switch (d.status) {
-					case "missing":
+					case "missed":
 						content = `<text 
 							x="${getSlotWidth(d) / 2}"
 							y="${((y(d.category) / 4))}"
-							font-size="1.5em" 
+							font-size=".75em" 
 							text-anchor="middle"
 							dominant-baseline="middle"
 							fill="white"
 							opacity=".37"
 						>Missed</text>`;
 						break;
-					case "proposed": case "orphaned":	
+					case "finalized":
+					case "justified":
+					case "proposed":
+					case "orphaned":
 						content = `<text 
 							x="${offset}"
 							y="0"
-							font-size="1em" 
+							font-size=".75em" 
 							fill="white"
 							opacity="1"
 							dy="0"
@@ -809,11 +801,17 @@ function realTimeChartMulti() {
 		function mapBlockStatusToColor(d) {
 			let retVal = "none";
 			switch (d.status) {
+				case "finalized":
+					retVal = "rgba(54, 149, 141, 1)";
+					break;
+				case "justified":
+					retVal = "rgba(54, 149, 141, .67)";
+					break;
 				case "proposed":
-					retVal = "rgb(54, 149, 141)";
+					retVal = "rgba(54, 149, 141, .17)";
 					break;
 				case "orphaned":
-					retVal = "rgba(54, 149, 141, .67)";
+					retVal = "rgba(0, 0, 0, .17)";
 					break;
 				case "missing":
 					retVal = "transparent"
@@ -837,7 +835,9 @@ function realTimeChartMulti() {
 			// there is a block
 			if (prevBlock) {
 				// ... and it is the parent block
-				if (prevBlock.status === "proposed") {
+				if (prevBlock.status === "finalized" ||
+					prevBlock.status === "justified" ||
+					prevBlock.status === "proposed") {
 					parentIndex = Math.round(x(prevBlock.time));
 					return parentIndex;
 				}
@@ -981,13 +981,6 @@ function realTimeChartMulti() {
 		return chart;
 	}
 
-	// chart title
-	chart.title = function (_) {
-		if (arguments.length == 0) return chartTitle;
-		chartTitle = _;
-		return chart;
-	}
-
 	// x axis title
 	chart.xTitle = function (_) {
 		if (arguments.length == 0) return xTitle;
@@ -1073,6 +1066,24 @@ function realTimeChartMulti() {
 		return chart;
 	}
 
+	chart.update = function (store) {
+		for (const datum of data) {
+			switch (datum.category) {
+				case "Epochs":
+					if (datum.label >= store.nextEpochTransition) datum.status = "scheduled";
+					else if (datum.label < store.nextEpochTransition && datum.label > store.justifiedEpoch) datum.status = "pending";
+					else if (datum.label <= store.justifiedEpoch && datum.label > store.finalizedEpoch) datum.status = "justified";
+					else if (datum.label <= store.finalizedEpoch) datum.status = "finalized";
+				case "Blocks":
+					if (datum.status === "justified") 
+						if (datum.slot <= store.finalizedSlot) datum.status = "finalized";			
+					if (datum.status === "proposed") 
+						if (datum.slot > store.finalizedSlot && datum.slot <= store.justifiedSlot) datum.status = "justified";
+			}
+		}
+		return chart;
+	}
+
 	return chart;
 
-} // end realTimeChart function
+} // end realTimeChart functionslac

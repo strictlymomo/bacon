@@ -4,14 +4,58 @@
 <head>
 	<meta charset="utf-8">
 	<title>Beacon Chain Visualizer</title>
-	<link rel=stylesheet type=text/css
-		href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css">
 	<link rel=stylesheet type=text/css href="style.css">
 
 <body>
 
 	<div class="layout">
 		<div>
+			<div id="status">
+				<div>
+					<div class="status-container border-bottom">
+						<div class="header-label"></div>
+						<div class="status-label"></div>
+						<div class="slot-header">Slot</div>
+						<div class="epoch-header">Epoch</div>
+						<div class="delta-label"></div>
+					</div>
+					<div class="status-container border-bottom">
+						<div class="header-label"><a href="https://prylabs.net/">Prysm Testnet</a></div>
+						<div class="status-label">Current</div>
+						<div class="slot-label" id="current-slot"></div>
+						<div class="epoch-label" id="current-epoch"></div> 
+						<div class="delta-label"></div>
+					</div>
+					<div class="status-container">
+						<div class="header-label"><a href="https://api.prylabs.net/">Prysm API Node</a></div>
+						<div class="status-label">Head</div>
+						<div class="slot-label" id="head-slot"></div>
+						<div class="epoch-label" id="head-epoch"></div>
+						<div class="delta-label" id="head-delta"></div>
+					</div>
+					<div class="status-container">
+						<div class="header-label"></div>
+						<div class="status-label">Justified</div>
+						<div class="slot-label" id="justified-slot"></div>
+						<div class="epoch-label" id="justified-epoch"></div>
+						<div class="delta-label"  id="justified-delta"></div>
+					</div>
+					<div class="status-container border-bottom">
+						<div class="header-label"></div>
+						<div class="status-label">Finalized</div>
+						<div class="slot-label" id="finalized-slot"></div>
+						<div class="epoch-label" id="finalized-epoch"></div>
+						<div class="delta-label" id="finalized-delta"></div>
+					</div>
+					<div class="status-container">
+						<div class="header-label">Next Epoch Transition in</div>
+						<div class="status-label"></div>
+						<div class="slot-label" id="transition-countdown-slot"></div>
+						<div class="epoch-label"></div>
+						<div class="delta-label"></div>
+					</div>
+				</div>
+			</div>
 			<div id="viewDiv"></div>
 			<div id="controls">
 				<input id="debug" type="checkbox" name="debug" value="debug" style="margin-bottom: 10px" /> Debug
