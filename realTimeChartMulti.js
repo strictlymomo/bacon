@@ -292,11 +292,16 @@ function realTimeChartMulti() {
 
 			const selection = d3.event.selection || xNav.range();
 
+			console.log("selection", selection);
+
 			// get the current time extent of viewport
 			startTimeViewport = xNav.invert(selection[0]);
 			endTimeViewport = xNav.invert(selection[1]);
 			extent = [startTimeViewport, endTimeViewport];
 
+			console.log("startTimeViewport", startTimeViewport);
+			console.log("endTimeViewport", endTimeViewport);
+			console.log("extent", extent);
 			// compute viewport extent in milliseconds
 			intervalViewport = endTimeViewport.getTime() - startTimeViewport.getTime();
 			offsetViewport = startTimeViewport.getTime() - startTime.getTime();

@@ -73,12 +73,22 @@ async function init() {
 		Prysm Data
 		----------------------------------- */
 
-	const NETWORK_GENESIS_TIME = "2020-01-10T00:00:00Z";
-	// Prysm API    
-	const BASE_URL = "https://api.prylabs.net/eth/v1alpha1";
+	// TEKU API    
+	const BASE_URL = "http://localhost:5051";
 	const NORMAL_INTERVAL = 12000;
 	const SLEEP_INTERVAL = 1000;
 	let pollInterval = NORMAL_INTERVAL;
+	
+	const NODE = {
+		GENESIS_URL: "/node/genesis_time",
+		getGenesis: async function () {
+			return await fetch(`${BASE_URL}${this.GENESIS_URL}`)
+			.then(response => response.json())
+			.then(d => d)
+		},
+	}
+
+	const NETWORK_GENESIS_TIME = await NODE.getGenesis();
 
 	const CHAINHEAD = {
 		URL: "/beacon/chainhead",
@@ -91,12 +101,12 @@ async function init() {
 	}
 
 	const BLOCKS = {
-		SLOT_URL: "/beacon/blocks?slot=",
-		EPOCH_URL: "/beacon/blocks?epoch=",
+		SLOT_URL: "/beacon/block?slot=",
+		EPOCH_URL: "/beacon/block?epoch=",
 		getBlock: async function (param) {
 			return await fetch(`${BASE_URL}${this.SLOT_URL}${param}`)
 				.then(response => response.json())
-				.then(d => (d.blockContainers.length === 1) ? d.blockContainers[0] : null);
+				.then(d => d.block ? d.block : null);
 		},
 		getBlocksByEpoch: async function (param) {
 			return await fetch(`${BASE_URL}${this.EPOCH_URL}${param}`)
@@ -206,7 +216,7 @@ async function init() {
 		store.currentBlock = await BLOCKS.getBlock(store.headSlot)
 
 		if (store.currentBlock) {
-			console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(store.currentBlock.blockRoot));
+			console.log("%cBlock Root:                ", "font-weight: bold", store.currentBlock.blockRoot);
 		} else {
 			console.log("No block");
 		}
