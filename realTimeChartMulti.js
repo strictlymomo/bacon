@@ -302,6 +302,7 @@ function realTimeChartMulti() {
 			console.log("startTimeViewport", startTimeViewport);
 			console.log("endTimeViewport", endTimeViewport);
 			console.log("extent", extent);
+
 			// compute viewport extent in milliseconds
 			intervalViewport = endTimeViewport.getTime() - startTimeViewport.getTime();
 			offsetViewport = startTimeViewport.getTime() - startTime.getTime();
@@ -427,7 +428,7 @@ function realTimeChartMulti() {
 
 			let slotWidth = 1;
 			if (updateBlocksSel.data().length > 0) {
-				slotWidth = getSlotWidth(updateBlocksSel.data()[3]);
+				slotWidth = getSlotWidth(updateBlocksSel.data()[0]);
 			}
 
 			// remove items
