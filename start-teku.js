@@ -148,8 +148,12 @@ async function init() {
 						};
 					}
 					console.log("                           ", blockContainer.block.slot, "   |   ", blockContainer.block.parent_root.substr(2, 4), " / ", blockContainer.blockRoot.substr(2, 4), "   |   ", parseInt((blockContainer.block.slot) % SLOTS_PER_EPOCH), "   |   ", calculateStatus(blockContainer.block.slot), "   |   ", calculateEpoch(blockContainer.block.slot));
-					console.log("what's the block:", createBlock(blockContainer.block.slot));
 					chart.datum(createBlock(blockContainer.block.slot));
+					let counter = blockContainer.block.slot;
+					for (let i = 0; i < 31; i++) {
+						counter -= 1;
+						chart.datum(createBlock(counter));
+					}
 				})
 			}
 		},
@@ -403,7 +407,7 @@ async function init() {
 	function setStateFromGenesis() {
 		let now = new Date().getTime();
 		let genesis = NETWORK_GENESIS_TIME * 1000;
-		store.currentSlot = Math.floor((now - genesis) / 12);
+		store.currentSlot = Math.floor((now - genesis) / 12 / 1000);
 		store.currentEpoch = Math.floor(store.currentSlot / 32);
 		store.scheduledEpoch = store.currentEpoch + 1;
 	}
