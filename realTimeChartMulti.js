@@ -292,16 +292,16 @@ function realTimeChartMulti() {
 
 			const selection = d3.event.selection || xNav.range();
 
-			console.log("selection", selection);
+			// console.log("selection", selection);
 
 			// get the current time extent of viewport
 			startTimeViewport = xNav.invert(selection[0]);
 			endTimeViewport = xNav.invert(selection[1]);
 			extent = [startTimeViewport, endTimeViewport];
 
-			console.log("startTimeViewport", startTimeViewport);
-			console.log("endTimeViewport", endTimeViewport);
-			console.log("extent", extent);
+			// console.log("startTimeViewport", startTimeViewport);
+			// console.log("endTimeViewport", endTimeViewport);
+			// console.log("extent", extent);
 
 			// compute viewport extent in milliseconds
 			intervalViewport = endTimeViewport.getTime() - startTimeViewport.getTime();
@@ -698,8 +698,22 @@ function realTimeChartMulti() {
 		function blockTemplate(d) {
 			let text = ``,
 				line = ``,
+				rect = ``,
 				content = ``,
 				votes_arr = [];
+			
+			rect = `
+				<rect 
+					class="block"
+					x="${0}"
+					y="${-(y(d.category) / 4)}" 
+					width="${getSlotWidth(d) - 1}"
+					height="${y(d.category)}"
+					rx="${roundedCorner(d)}" 
+					ry="${roundedCorner(d)}"
+					fill="${mapBlockStatusToColor(d)}"
+					stroke="none"
+				></rect>`;
 
 			if (getSlotWidth(d) > 10) {
 				line = `
@@ -730,6 +744,7 @@ function realTimeChartMulti() {
 				let w = 2,
 					h = 2,
 					votes = d.votes;
+				
 				for (votes; votes > 0; votes--) {
 					let vote = `<rect
 						x="${getSlotWidth(d) / 2}"
@@ -740,6 +755,22 @@ function realTimeChartMulti() {
 						></rect>`;
 					votes_arr.push(vote);
 				};
+
+				// square
+				if (getSlotWidth(d) > `${y(d.category)}`) {
+					rect = `
+						<rect 
+							class="block"
+							x="${0}"
+							y="${-(y(d.category) / 4)}" 
+							width="${y(d.category)}"
+							height="${y(d.category)}"
+							rx="${roundedCorner(d)}" 
+							ry="${roundedCorner(d)}"
+							fill="${mapBlockStatusToColor(d)}"
+							stroke="none"
+						></rect>`;
+				}
 
 				switch (d.status) {
 					case "missed":
@@ -757,18 +788,22 @@ function realTimeChartMulti() {
 					case "justified":
 					case "proposed":
 					case "orphaned":
-						content = `<text 
-							x="${offset}"
-							y="0"
-							font-size=".75em" 
-							fill="white"
-							opacity="1"
-							dy="0"
-							>
-							<tspan x="${offset}" dy="2.4em">0x.......${d.slot}</tspan>
-							<tspan x="${offset}" dy="1.2em">Proposed by:		${d.proposedBy}</tspan>
-							<tspan x="${offset}" dy="1.2em">Attestations:		${d.votes}</tspan>
-						</text>`;
+						let parentRoot = `
+							<text 
+								text-anchor="start"
+								font-size="1em"
+								x="${offset}" y="0"
+								fill="white" opacity="1">${d.parentRoot.substr(2,4)}</text>
+						`;
+						let xPos = (getSlotWidth(d) > `${y(d.category)}`) ? `${y(d.category) - offset}` : `${getSlotWidth(d) - offset}`;
+						let blockRoot = `
+							<text 
+								text-anchor="end"
+								font-size="1em"
+								x="${xPos}"  y="0" 
+								fill="white" opacity="1">${d.blockRoot.substr(2,4)}</text>	
+						`;
+						content = parentRoot + blockRoot;
 						break;
 					default:
 						break;
@@ -778,17 +813,7 @@ function realTimeChartMulti() {
 			return `
 			${text}
 			${line}
-			<rect 
-				class="block"
-				x="${0}"
-				y="${-(y(d.category) / 4)}" 
-				width="${getSlotWidth(d)}"
-				height="${y(d.category)}"
-				rx="${roundedCorner(d)}" 
-				ry="${roundedCorner(d)}"
-				fill="${mapBlockStatusToColor(d)}"
-				stroke="none"
-			></rect>
+			${rect}
 			${content}
 			${/* TODO: ${votes_arr} */""}
 			`;

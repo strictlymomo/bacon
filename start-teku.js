@@ -186,17 +186,17 @@ async function init() {
 		scheduledEpoch: null,
 		nextEpochTransition: null,
 
-		// head (Prysm API)
+		// head (Node API)
 		headBlockRoot: "",
 		headSlot: "",
 		headEpoch: "",
 
-		// justified (Prysm API)
+		// justified (Node API)
 		justifiedSlot: "",
 		justifiedEpoch: "",
 		justifiedBlockRoot: "",
 
-		// finalized (Prysm API)
+		// finalized (Node API)
 		finalizedSlot: "",
 		finalizedEpoch: "",
 		finalizedBlockRoot: "",
@@ -284,7 +284,7 @@ async function init() {
 				if (store.gapBlock) {
 					console.log("block ?                    ", store.gapBlock);
 					console.log("%cBlock Root:                ", "font-weight: bold", store.gapBlock.blockRoot);
-					chart.datum(createBlock(store.gapBlock.block.slot, store.gapBlock.blockRoot, store.gapBlock.block.parentRoot));
+					chart.datum(createBlock(store.gapBlock.block.slot, store.gapBlock.blockRoot, store.gapBlock.block.parent_root));
 				} else if (store.gapBlock === null) {
 					// block is missing
 					console.log("block ?                    ", store.gapBlock);

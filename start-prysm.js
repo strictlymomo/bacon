@@ -120,7 +120,7 @@ async function init() {
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
 				chart.datum(createEpoch(epoch));
 
-				blockContainersInEpoch.forEach((blockContainer, i) => {
+				for (const [i, blockContainer] of blockContainersInEpoch.entries()) {
 					let currSlot = blockContainersInEpoch[i].block.block.slot;
 
 					if (currSlot > 0 && blockContainersInEpoch[i - 1]) {
@@ -138,8 +138,8 @@ async function init() {
 						};
 					}
 					console.log("                           ", blockContainer.block.block.slot, "   |   ", base64toHEX(blockContainer.block.block.parentRoot).substr(2, 4), " / ", base64toHEX(blockContainer.blockRoot).substr(2, 4), "   |   ", parseInt((blockContainer.block.block.slot) % SLOTS_PER_EPOCH), "   |   ", calculateStatus(blockContainer.block.block.slot), "   |   ", calculateEpoch(blockContainer.block.block.slot));
-					chart.datum(createBlock(blockContainer.block.block.slot));
-				})
+					chart.datum(createBlock(blockContainer.block.block.slot, blockContainer.blockRoot, blockContainer.block.block.parentRoot));
+				}
 			}
 		},
 	}
@@ -255,7 +255,7 @@ async function init() {
 				if (store.gapBlock) {
 					console.log("block ?                    ", store.gapBlock);
 					console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(store.gapBlock.blockRoot));
-					chart.datum(createBlock(store.gapBlock.block.block.slot));
+					chart.datum(createBlock(store.gapBlock.block.block.slot, store.currentBlock.blockRoot, store.currentBlock.block.block.parentRoot));
 				} else if (store.gapBlock === null){
 					// block is missing
 					console.log("block ?                    ", store.gapBlock);
@@ -284,7 +284,7 @@ async function init() {
 			store.currentBlock = await BLOCKS.getBlock(store.headSlot);
 			if (store.currentBlock) {
 				console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(store.currentBlock.blockRoot));
-				chart.datum(createBlock(store.currentBlock.block.block.slot));
+				chart.datum(createBlock(store.currentBlock.block.block.slot, store.currentBlock.blockRoot, store.currentBlock.block.block.parentRoot));
 			} else if (store.currentBlock === null) {
 				console.log("No block");
 				chart.datum(createMissingBlock(store.headSlot));
@@ -302,7 +302,7 @@ async function init() {
 			store.currentBlock = await BLOCKS.getBlock(store.headSlot);
 			if (store.currentBlock) {
 				console.log("%cBlock Root:                ", "font-weight: bold", base64toHEX(store.currentBlock.blockRoot));
-				chart.datum(createBlock(store.currentBlock.block.block.slot));
+				chart.datum(createBlock(store.currentBlock.block.block.slot, store.currentBlock.blockRoot, store.currentBlock.block.block.parentRoot));
 			} else if (store.currentBlock === null) {
 				console.log("No block");
 				chart.datum(createMissingBlock(store.headSlot));
@@ -348,13 +348,15 @@ async function init() {
 		console.log("%cEpoch Transition in:   	   ", "font-weight: bold", store.nextEpochTransition * SLOTS_PER_EPOCH - store.headSlot, "slots ->", store.nextEpochTransition);
 	}
 
-	function createBlock(slot) {
+	function createBlock(slot, blockRoot, parentRoot) {
 		return {
 			category: "Blocks",
 			epoch: calculateEpoch(slot),
 			slot: parseInt(slot),
 			status: calculateStatus(slot),
 			time: calculateTime(slot),
+			blockRoot: base64toHEX(blockRoot),
+			parentRoot: base64toHEX(parentRoot)
 		}
 	}
 
@@ -365,6 +367,8 @@ async function init() {
 			slot: slot,
 			status: "missed",
 			time: calculateTime(slot),
+			blockRoot: null,
+			parentRoot: null
 		}
 	}
 
