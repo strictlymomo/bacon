@@ -67,7 +67,7 @@ async function init() {
 	d3.select("#show-attestations").on("change", function () {
 		let state = d3.select(this).property("checked");
 		chart.showAttestations(state);
-	});	
+	});
 
 	/* 	-----------------------------------
 		Prysm Data
@@ -78,13 +78,13 @@ async function init() {
 	const NORMAL_INTERVAL = 12000;
 	const SLEEP_INTERVAL = 1000;
 	let pollInterval = NORMAL_INTERVAL;
-	
+
 	const NODE = {
 		GENESIS_URL: "/node/genesis_time",
 		getGenesis: async function () {
 			return await fetch(`${BASE_URL}${this.GENESIS_URL}`)
-			.then(response => response.json())
-			.then(d => d)
+				.then(response => response.json())
+				.then(d => d);
 		},
 	}
 
@@ -120,17 +120,15 @@ async function init() {
 			console.log("prevEpochs:                ", prevEpochs);
 			console.log("%c                            GETTING BLOCKS FOR PREVIOUS EPOCHS", "color: gray");
 			console.log("                           ", "Slot", "    | ", "Parent", " / ", "Root", "   |   ", "Mod", "  |  ", "Status", "   |   ", "Epoch");
-			
+
 			epochsAgo = prevEpochs.length;
 			maxSeconds = getMaxSeconds(epochsAgo);
-			// chart.maxSeconds(maxSeconds);
 
 			for (const epoch of prevEpochs) {
-
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
 				chart.datum(createEpoch(epoch));
 
-				blockContainersInEpoch.forEach((blockContainer, i) => {
+				for (const [i, blockContainer] of blockContainersInEpoch.entries()) {
 					let currSlot = blockContainersInEpoch[i].block.slot;
 
 					if (currSlot > 0 && blockContainersInEpoch[i - 1]) {
@@ -148,13 +146,29 @@ async function init() {
 						};
 					}
 					console.log("                           ", blockContainer.block.slot, "   |   ", blockContainer.block.parent_root.substr(2, 4), " / ", blockContainer.blockRoot.substr(2, 4), "   |   ", parseInt((blockContainer.block.slot) % SLOTS_PER_EPOCH), "   |   ", calculateStatus(blockContainer.block.slot), "   |   ", calculateEpoch(blockContainer.block.slot));
-					chart.datum(createBlock(blockContainer.block.slot));
+
+					chart.datum(createBlock(blockContainer.block.slot, blockContainer.blockRoot, blockContainer.block.parent_root));
+					
+					// hack - see blockroots arrows to fix strange ordering
+					// backfill blocks between the head blocks of each epoch returned by Teku API
 					let counter = blockContainer.block.slot;
-					for (let i = 0; i < 31; i++) {
-						counter -= 1;
-						chart.datum(createBlock(counter));
+					for (let i = 0; i < SLOTS_PER_EPOCH - 1; i++) {
+						if (counter > 0) {
+							counter--;
+							let block = await BLOCKS.getBlock(counter);
+							chart.datum(createBlock(block.block.slot, block.blockRoot, block.block.parent_root));
+						}
 					}
-				})
+				}
+			}
+			// backfill blocks between first slot of head epoch and head slot
+			let lastSlot = prevEpochs[prevEpochs.length - 1] * SLOTS_PER_EPOCH;
+			let counter = lastSlot;
+			while (store.headSlot + 1 > counter) {
+				let block = await BLOCKS.getBlock(counter);
+				console.log("block", block);
+				chart.datum(createBlock(block.block.slot, block.blockRoot, block.block.parent_root));
+				counter++;
 			}
 		},
 	}
@@ -162,7 +176,7 @@ async function init() {
 	let chainhead = {};
 
 	let store = {
-		
+
 		// current
 		currentSlot: null,
 		currentEpoch: null,
@@ -207,7 +221,7 @@ async function init() {
 		console.log("%cNext Epoch:				   ", "font-weight: bold", store.scheduledEpoch);
 		chart.datum(createScheduledEpoch(store.scheduledEpoch));
 	}
-	
+
 	async function getInitial() {
 
 		setStateFromGenesis();
@@ -270,8 +284,8 @@ async function init() {
 				if (store.gapBlock) {
 					console.log("block ?                    ", store.gapBlock);
 					console.log("%cBlock Root:                ", "font-weight: bold", store.gapBlock.blockRoot);
-					chart.datum(createBlock(store.gapBlock.block.slot));
-				} else if (store.gapBlock === null){
+					chart.datum(createBlock(store.gapBlock.block.slot, store.gapBlock.blockRoot, store.gapBlock.block.parentRoot));
+				} else if (store.gapBlock === null) {
 					// block is missing
 					console.log("block ?                    ", store.gapBlock);
 					chart.datum(createMissingBlock(prev + 1));
@@ -285,7 +299,7 @@ async function init() {
 					updateStatusTemplate();
 					chart.datum(createScheduledEpoch(store.scheduledEpoch));
 				}
-				
+
 				difference--;
 				prev++;
 			} while (difference > 1);
@@ -299,7 +313,7 @@ async function init() {
 			store.currentBlock = await BLOCKS.getBlock(store.headSlot);
 			if (store.currentBlock) {
 				console.log("%cBlock Root:                ", "font-weight: bold", store.currentBlock.blockRoot);
-				chart.datum(createBlock(store.currentBlock.block.slot));
+				chart.datum(createBlock(store.currentBlock.block.slot, store.currentBlock.blockRoot, store.currentBlock.block.parent_root));
 			} else if (store.currentBlock === null) {
 				console.log("No block");
 				chart.datum(createMissingBlock(store.headSlot));
@@ -317,10 +331,7 @@ async function init() {
 			store.currentBlock = await BLOCKS.getBlock(store.headSlot);
 			if (store.currentBlock) {
 				console.log("%cBlock Root:                ", "font-weight: bold", store.currentBlock.blockRoot);
-				let what = createBlock(store.currentBlock.block.slot);
-				console.log("what", what);
-				chart.datum(what);
-				// chart.datum(createBlock(store.currentBlock.block.slot));
+				chart.datum(createBlock(store.currentBlock.block.slot, store.currentBlock.blockRoot, store.currentBlock.block.parent_root));
 			} else if (store.currentBlock === null) {
 				console.log("No block");
 				chart.datum(createMissingBlock(store.headSlot));
@@ -346,7 +357,7 @@ async function init() {
 
 	async function updateStatusFromChainhead() {
 		console.log("=========================== UPDATING STATUS FROM CHAINHEAD");
-		
+
 		chainhead = await CHAINHEAD.getChainhead();
 		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
 
@@ -366,13 +377,15 @@ async function init() {
 		console.log("%cEpoch Transition in:   	   ", "font-weight: bold", store.nextEpochTransition * SLOTS_PER_EPOCH - store.headSlot, "slots ->", store.nextEpochTransition);
 	}
 
-	function createBlock(slot) {
+	function createBlock(slot, blockRoot, parentRoot) {
 		return {
 			category: "Blocks",
 			epoch: calculateEpoch(slot),
 			slot: parseInt(slot),
 			status: calculateStatus(slot),
 			time: calculateTime(slot),
+			blockRoot,
+			parentRoot
 		}
 	}
 
@@ -498,19 +511,19 @@ async function init() {
 				if (delta > 1) msg = `${delta} epochs behind`;
 				break;
 			case "justified":
-				if (delta  > 2) msg = `${delta} checkpoints behind`;
+				if (delta > 2) msg = `${delta} checkpoints behind`;
 				break;
 			case "finalized":
-				if (delta  > 3) msg = `${delta} checkpoints behind`;
+				if (delta > 3) msg = `${delta} checkpoints behind`;
 				break;
 			default:
-				break;	
+				break;
 		}
 		return msg;
 	}
 
 	function enumeratePreviousEpochs(max, min) {
-		return Array.apply(null, {length: max + 1}).map(Number.call, Number).slice(min);
+		return Array.apply(null, { length: max + 1 }).map(Number.call, Number).slice(min);
 	}
 
 } // end init function
