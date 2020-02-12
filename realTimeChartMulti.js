@@ -127,7 +127,7 @@ function realTimeChartMulti() {
 
 		// define main chart scales
 		x = d3.scaleTime().range([0, width]);
-		y = d3.scalePoint().domain(yDomain).rangeRound([height, 0]).padding(.5)
+		y = d3.scalePoint().domain(yDomain).rangeRound([height, 0]).padding(.5);
 
 		/* 	------------------------------------------------------------------------------------
 			scales
@@ -663,7 +663,6 @@ function realTimeChartMulti() {
 					stroke="white"
 					stroke-opacity=".37"
 				>
-				${justificationAnimationTemplate(d.status)}
 				</line>
 				<text 
 					x="${offset}" 
@@ -672,23 +671,8 @@ function realTimeChartMulti() {
 					fill="white"
 				>EPOCH ${d.label}
 					<tspan x="${offset}" dy="1.2em">${(d.status).toUpperCase()}</tspan>
-				${justificationAnimationTemplate(d.status)}
 				</text>
 			`;
-		}
-
-		function justificationAnimationTemplate(status) {
-			if (status === "pending" || "justified") {
-				return `<animate id="animation1"
-				attributeName="opacity"
-				from="0" to="1" dur="3s"
-				begin="0s;animation2.end" />
-				<animate id="animation2"
-				attributeName="opacity"
-				from="1" to="0" dur="3s" 
-				begin="animation1.end" />`;
-			}
-			return "";
 		}
 
 		/* 	--------------------------------------
@@ -793,7 +777,7 @@ function realTimeChartMulti() {
 								text-anchor="start"
 								font-size="1em"
 								x="${offset}" y="0"
-								fill="white" opacity="1">${d.parentRoot.substr(2,4)}</text>
+								fill="white" opacity=".17">${d.parentRoot.substr(2,4)}</text>
 						`;
 						let xPos = (getSlotWidth(d) > `${y(d.category)}`) ? `${y(d.category) - offset}` : `${getSlotWidth(d) - offset}`;
 						let blockRoot = `
