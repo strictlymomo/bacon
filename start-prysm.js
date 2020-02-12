@@ -10,6 +10,7 @@ const ACTIVE_VALIDATOR_SET = 1000;
 
 let epochsAgo = 4;
 let maxSeconds = getMaxSeconds(epochsAgo);
+const NETWORK_GENESIS_TIME = "2020-01-10T00:00:00Z";
 
 async function init() {
 
@@ -73,7 +74,6 @@ async function init() {
 		Prysm Data
 		----------------------------------- */
 
-	const NETWORK_GENESIS_TIME = "2020-01-10T00:00:00Z";
 	// Node API    
 	const BASE_URL = "https://api.prylabs.net/eth/v1alpha1";
 	const NORMAL_INTERVAL = 12000;
@@ -213,6 +213,7 @@ async function init() {
 
 		await BLOCKS.getBlocksForPreviousEpochs(store.headEpoch, store.finalizedEpoch);
 		chart.datum(createScheduledEpoch(store.scheduledEpoch));
+		chart.store(store);
 		chart.update(store);
 		updateStatusTemplate();
 	}
@@ -266,6 +267,7 @@ async function init() {
 				if ((prev + 1) % SLOTS_PER_EPOCH === 0) {
 					await updateStatusFromChainhead();
 					console.log("let's update the statuses");
+					chart.store(store);
 					chart.update(store);
 					updateStatusTemplate();
 					chart.datum(createScheduledEpoch(store.scheduledEpoch));
@@ -313,6 +315,7 @@ async function init() {
 			if (store.headSlot % SLOTS_PER_EPOCH === 0) {
 				await updateStatusFromChainhead();
 				console.log("let's update the statuses");
+				chart.store(store);
 				chart.update(store);
 				updateStatusTemplate();
 				chart.datum(createScheduledEpoch(store.scheduledEpoch));
@@ -399,10 +402,6 @@ async function init() {
 		store.scheduledEpoch = store.currentEpoch + 1;
 	}
 
-	function calculateTime(slot) {
-		return new Date(new Date(NETWORK_GENESIS_TIME).getTime() + (slot * SECONDS_PER_SLOT * 1000))
-	}
-
 	function calculateEpoch(slot) {
 		return Math.floor(slot / 32)
 	}
@@ -485,10 +484,10 @@ async function init() {
 				if (delta > 1) msg = `${delta} epochs behind`;
 				break;
 			case "justified":
-				if (delta  > 2) msg = `${delta} checkpoints behind`;
+				if (delta > 2) msg = `${delta} checkpoints behind`;
 				break;
 			case "finalized":
-				if (delta  > 3) msg = `${delta} checkpoints behind`;
+				if (delta > 3) msg = `${delta} checkpoints behind`;
 				break;
 			default:
 				break;	
@@ -520,4 +519,8 @@ function base64toHEX(base64) {
 
 function getMaxSeconds(epochsAgo) {
 	return (epochsAgo * SLOTS_PER_EPOCH * SECONDS_PER_SLOT) + (1 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT);
+}
+
+function calculateTime(slot) {
+	return new Date(new Date(NETWORK_GENESIS_TIME).getTime() + (slot * SECONDS_PER_SLOT * 1000))
 }

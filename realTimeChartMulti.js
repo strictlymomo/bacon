@@ -26,7 +26,8 @@ function realTimeChartMulti() {
 		headSlotTimeOffset,
 		showRoots = false,
 		showProposers = false,
-		showAttestations = false;
+		showAttestations = false,
+		store;
 
 	/* 	------------------------------------------------------------------------------------
 		create the chart
@@ -182,6 +183,24 @@ function realTimeChartMulti() {
 		// is clipped to the full time domain
 		let nowG = main.append("g")
 			.attr("class", "nowGroup")
+			.attr("transform", "translate(0, 0)")
+			.attr("clip-path", "url(#myClip")
+			.append("g");
+
+		let chainheadG = main.append("g")
+			.attr("class", "chainheadGroup")
+			.attr("transform", "translate(0, 0)")
+			.attr("clip-path", "url(#myClip")
+			.append("g");
+
+		let justificationG = main.append("g")
+			.attr("class", "justificationGroup")
+			.attr("transform", "translate(0, 0)")
+			.attr("clip-path", "url(#myClip")
+			.append("g");
+
+		let finalizationG = main.append("g")
+			.attr("class", "finalizationGroup")
 			.attr("transform", "translate(0, 0)")
 			.attr("clip-path", "url(#myClip")
 			.append("g");
@@ -375,6 +394,117 @@ function realTimeChartMulti() {
 			updateNowSel
 				.attr("transform", d => translateNow(d))
 				.html(d => nowTemplate());
+
+			/* 	------------------------------------------------------------------------------------
+				CHAINHEAD MARKER
+				------------------------------------------------------------------------------------ */
+
+			let chainhead_ts = new Date(new Date().getTime() - (SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
+			let chainhead_slot = "";
+
+			if (store) {
+				chainhead_ts = calculateTime(store.headSlot);
+				chainhead_slot = store.headSlot;
+			}
+
+			let chainhead = [{
+				label: "Chainhead",
+				time: chainhead_ts,
+				slot: chainhead_slot,
+				color: "rgba(54, 149, 141, .17)"
+			}];
+
+			// create update selection
+			let updateChainheadSel = chainheadG.selectAll(".chainhead")
+				.data(chainhead);
+
+			// remove items
+			updateChainheadSel.exit().remove();
+
+			// add items
+			updateChainheadSel.enter()
+				.append("g")
+				.attr("class", "chainhead")
+				.attr("transform", d => translateChainhead(d))
+				.html(d => chainheadTemplate(d));
+
+			updateChainheadSel
+				.attr("transform", d => translateChainhead(d))
+				.html(d => chainheadTemplate(d));
+
+			/* 	------------------------------------------------------------------------------------
+				JUSTIFICATION MARKER
+				------------------------------------------------------------------------------------ */
+
+			let justification_ts = new Date(new Date().getTime() - (2 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
+			let justification_slot = "";
+
+			if (store) {
+				justification_ts = calculateTime(store.justifiedSlot);
+				justification_slot = store.justifiedSlot;
+			}
+
+			let justification = [{
+				label: "Last Justified",
+				time: justification_ts, 
+				slot: justification_slot,
+				color: "rgba(54, 149, 141, .67)"
+			}];
+
+			// create update selection
+			let updateJustificationSel = justificationG.selectAll(".justification")
+				.data(justification);
+
+			// remove items
+			updateJustificationSel.exit().remove();
+
+			// add items
+			updateJustificationSel.enter()
+				.append("g")
+				.attr("class", "justification")
+				.attr("transform", d => translateCheckpoint(d))
+				.html(d => checkpointTemplate(d));
+
+			updateJustificationSel
+				.attr("transform", d => translateCheckpoint(d))
+				.html(d => checkpointTemplate(d));
+
+			/* 	------------------------------------------------------------------------------------
+				FINALIZATION MARKER
+				------------------------------------------------------------------------------------ */
+
+			let finalization_ts = new Date(new Date().getTime() - (3 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
+			let finalization_slot = "";
+
+			if (store) {
+				finalization_ts = calculateTime(store.finalizedSlot);
+				finalization_slot = store.finalizedSlot;
+			}
+
+			let finalization = [{ 
+				label: "Last Finalized",
+				time: finalization_ts, 
+				slot: finalization_slot,
+				color: "rgba(54, 149, 141, 1)"
+			}];
+
+			// create update selection
+			let updatefinalizationSel = finalizationG.selectAll(".finalization")
+				.data(finalization);
+
+			// remove items
+			updatefinalizationSel.exit().remove();
+
+			// add items
+			updatefinalizationSel.enter()
+				.append("g")
+				.attr("class", "finalization")
+				.attr("transform", d => translateCheckpoint(d))
+				.html(d => checkpointTemplate(d));
+
+			updatefinalizationSel
+				.attr("transform", d => translateCheckpoint(d))
+				.html(d => checkpointTemplate(d));
 
 			/* 	------------------------------------------------------------------------------------
 				EPOCHS
@@ -614,6 +744,18 @@ function realTimeChartMulti() {
 			return `translate(${retValX},${retValY})`;
 		}
 
+		function translateChainhead(d) {
+			let retValX = Math.round(x(d.time)),
+				retValY = 0;
+			return `translate(${retValX},${retValY})`;
+		}
+
+		function translateCheckpoint(d) {
+			let retValX = Math.round(x(d.time)),
+				retValY = 0;
+			return `translate(${retValX},${retValY})`;
+		}
+
 		function translateDataGroup(d) {
 			let retValX = Math.round(x(d.time)),
 				retValY = y(d.category);
@@ -641,6 +783,70 @@ function realTimeChartMulti() {
 					stroke="red"
 					stroke-width="2"
 				></line>`;
+		}
+
+
+		/* 	--------------------------------------
+			CHAINHEAD
+			-------------------------------------- */
+
+		function chainheadTemplate(d) {
+			const radius = 4;
+			return `
+					<circle 
+						cx="0" 
+						cy="${height - radius}" 
+						r="${radius}" 
+						fill="${d.color}"
+					></circle>
+					<line
+						x1="0" 
+						x2="0" 
+						y1="0"
+						y2="${height}"
+						stroke="${d.color}"
+						stroke-width="2"
+					></line>
+					<text 
+						x="${offset}" 
+						y="${8}" 
+						font-size=".71em" 
+						fill="${d.color}"
+					>${d.label}
+						<tspan x="${offset}" dy="1.2em">${d.slot}</tspan>
+					</text>`;
+		}
+
+		/* 	--------------------------------------
+			CHECKPOINT
+			-------------------------------------- */
+
+		function checkpointTemplate(d) {
+			const radius = 4;
+			return `
+					<circle 
+						cx="0" 
+						cy="${height - radius}" 
+						r="${radius}" 
+						fill="${d.color}"
+					></circle>
+					<line
+						x1="0" 
+						x2="0" 
+						y1="0"
+						y2="${height}"
+						stroke="${d.color}"
+						stroke-width="2"
+					></line>
+					<text 
+						x="${offset}" 
+						y="${8}" 
+						font-size=".71em" 
+						fill="${d.color}"
+					>${d.label}
+						<tspan x="${offset}" dy="1.2em">Checkpoint</tspan>
+						<tspan x="${offset}" dy="1.2em">${d.slot}</tspan>
+					</text>`;
 		}
 
 		/* 	--------------------------------------
@@ -685,7 +891,7 @@ function realTimeChartMulti() {
 				rect = ``,
 				content = ``,
 				votes_arr = [];
-			
+
 			rect = `
 				<rect 
 					class="block"
@@ -721,14 +927,14 @@ function realTimeChartMulti() {
 						fill="white"
 						opacity=".73"
 						${/* TODO: transform="rotate(-90, ${-offset}, 0)" */""}
-					>${d.slot}</text>`	
+					>${d.slot}</text>`
 			}
 
 			if (getSlotWidth(d) > 100) {
 				let w = 2,
 					h = 2,
 					votes = d.votes;
-				
+
 				for (votes; votes > 0; votes--) {
 					let vote = `<rect
 						x="${getSlotWidth(d) / 2}"
@@ -776,16 +982,16 @@ function realTimeChartMulti() {
 							<text 
 								text-anchor="start"
 								font-size="1em"
-								x="${offset}" y="0"
-								fill="white" opacity=".17">${d.parentRoot.substr(2,4)}</text>
+								x="${offset * 2}" y="0"
+								fill="white" opacity=".17">${d.parentRoot.substr(2, 4)}</text>
 						`;
-						let xPos = (getSlotWidth(d) > `${y(d.category)}`) ? `${y(d.category) - offset}` : `${getSlotWidth(d) - offset}`;
+						let xPos = (getSlotWidth(d) > `${y(d.category)}`) ? `${y(d.category) - offset * 2}` : `${getSlotWidth(d) - offset * 2}`;
 						let blockRoot = `
 							<text 
 								text-anchor="end"
 								font-size="1em"
 								x="${xPos}"  y="0" 
-								fill="white" opacity="1">${d.blockRoot.substr(2,4)}</text>	
+								fill="white" opacity="1">${d.blockRoot.substr(2, 4)}</text>	
 						`;
 						content = parentRoot + blockRoot;
 						break;
@@ -1081,6 +1287,12 @@ function realTimeChartMulti() {
 		return chart;
 	}
 
+	chart.store = function (_) {
+		if (arguments.length == 0) return store;
+		store = _;
+		return chart;
+	}
+
 	chart.update = function (store) {
 		for (const datum of data) {
 			switch (datum.category) {
@@ -1090,9 +1302,9 @@ function realTimeChartMulti() {
 					else if (datum.label <= store.justifiedEpoch && datum.label > store.finalizedEpoch) datum.status = "justified";
 					else if (datum.label <= store.finalizedEpoch) datum.status = "finalized";
 				case "Blocks":
-					if (datum.status === "justified") 
-						if (datum.slot <= store.finalizedSlot) datum.status = "finalized";			
-					if (datum.status === "proposed") 
+					if (datum.status === "justified")
+						if (datum.slot <= store.finalizedSlot) datum.status = "finalized";
+					if (datum.status === "proposed")
 						if (datum.slot > store.finalizedSlot && datum.slot <= store.justifiedSlot) datum.status = "justified";
 			}
 		}
