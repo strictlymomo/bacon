@@ -255,6 +255,9 @@ async function init() {
 
 		console.log("===========================");
 
+		let duplicates = checkDuplicateInObject("time", chart.getData().filter(d => d.category === "Blocks"));
+		console.log("%cAny Duplicates?           ", "font-weight: bold", duplicates);
+
 		setStateFromGenesis();
 
 		// Update previous
@@ -364,10 +367,6 @@ async function init() {
 
 	async function updateStatusFromChainhead() {
 		console.log("=========================== UPDATING STATUS FROM CHAINHEAD");
-		
-		// console.log("chart.data", chart.getData());
-		// let duplicates = checkDuplicateInObject("time", data.filter(d => d.category === "Blocks"));
-		// console.log("%cAny Duplicates?           ", "font-weight: bold", duplicates);
 		
 		chainhead = await CHAINHEAD.getChainhead();
 		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
