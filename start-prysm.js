@@ -89,6 +89,15 @@ async function init() {
 		}
 	}
 
+	const VALIDATORS = {
+		PARTICIPATION_FOR_EPOCH_URL: "/validators/participation?epoch=",
+		getParticipationForEpoch: async function(param) {
+			return await fetch(`${BASE_URL}${this.PARTICIPATION_FOR_EPOCH_URL}${param}`)
+				.then(response => response.json())
+				.then(d => d);
+		}
+	}
+
 	const BLOCKS = {
 		SLOT_URL: "/beacon/blocks?slot=",
 		EPOCH_URL: "/beacon/blocks?epoch=",
@@ -116,8 +125,10 @@ async function init() {
 
 			for (const epoch of prevEpochs) {
 
+				let pData = await VALIDATORS.getParticipationForEpoch(epoch);
+				chart.datum(createEpoch(epoch, participation));
+				
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
-				chart.datum(createEpoch(epoch));
 
 				for (const [i, blockContainer] of blockContainersInEpoch.entries()) {
 					let currSlot = blockContainersInEpoch[i].block.block.slot;
@@ -374,12 +385,17 @@ async function init() {
 		}
 	}
 
-	function createEpoch(epoch) {
+	function createEpoch(epoch, participate) {
 		return {
 			category: "Epochs",
 			time: calculateTimeFromEpoch(epoch),
 			label: epoch,
-			status: ""
+			status: "",
+			participation: {
+				globalParticipationRate: participate.globalParticipationRate,
+				votedEther: parseInt(participate.votedEther),
+				eligibleEther: parseInt(participate.eligibleEther)
+			}
 		};
 	}
 
@@ -388,7 +404,12 @@ async function init() {
 			category: "Epochs",
 			time: calculateTimeFromEpoch(epoch),
 			label: epoch,
-			status: "scheduled"
+			status: "scheduled",
+			participation: {
+				globalParticipationRate: 0,
+				votedEther: 0,
+				eligibleEther: parseInt("120255100000000")
+			}
 		};
 	}
 

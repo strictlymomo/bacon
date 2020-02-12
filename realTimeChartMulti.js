@@ -397,11 +397,12 @@ function realTimeChartMulti() {
 				.html(d => nowTemplate());
 
 			/* 	------------------------------------------------------------------------------------
-				CHAINHEAD MARKER
+				CHAINHEAD
 				------------------------------------------------------------------------------------ */
 
 			let chainhead_ts = new Date(new Date().getTime() - (SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
 			let chainhead_slot = "";
+			let chainhead_stake = 0;
 
 			if (store) {
 				chainhead_ts = calculateTime(store.headSlot);
@@ -412,6 +413,7 @@ function realTimeChartMulti() {
 				label: "Chainhead",
 				time: chainhead_ts,
 				slot: chainhead_slot,
+				stake: chainhead_stake,
 				color: "rgba(54, 149, 141, .17)"
 			}];
 
@@ -434,11 +436,12 @@ function realTimeChartMulti() {
 				.html(d => chainheadTemplate(d));
 
 			/* 	------------------------------------------------------------------------------------
-				JUSTIFICATION MARKER
+				JUSTIFICATION CHECKPOINT
 				------------------------------------------------------------------------------------ */
 
 			let justification_ts = new Date(new Date().getTime() - (2 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
 			let justification_slot = "";
+			let justification_stake = 66;
 
 			if (store) {
 				justification_ts = calculateTime(store.justifiedSlot);
@@ -449,6 +452,7 @@ function realTimeChartMulti() {
 				label: "Last Justified",
 				time: justification_ts,
 				slot: justification_slot,
+				stake: justification_stake,
 				color: "rgba(54, 149, 141, .67)"
 			}];
 
@@ -471,11 +475,12 @@ function realTimeChartMulti() {
 				.html(d => checkpointTemplate(d));
 
 			/* 	------------------------------------------------------------------------------------
-				FINALIZATION MARKER
+				FINALIZATION CHECKPOINT
 				------------------------------------------------------------------------------------ */
 
 			let finalization_ts = new Date(new Date().getTime() - (3 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
 			let finalization_slot = "";
+			let finalization_stake = 66;
 
 			if (store) {
 				finalization_ts = calculateTime(store.finalizedSlot);
@@ -486,6 +491,7 @@ function realTimeChartMulti() {
 				label: "Last Finalized",
 				time: finalization_ts,
 				slot: finalization_slot,
+				stake: finalization_stake,
 				color: "rgba(54, 149, 141, 1)"
 			}];
 
@@ -821,12 +827,13 @@ function realTimeChartMulti() {
 					stroke-width="2"
 				></line>
 				<text 
-					x="${offset}" 
-					y="${height - 23}" 
+					x="${offset * 1.5}" 
+					y="${height - 40}" 
 					font-size=".71em" 
 					fill="${d.color}"
 				>${d.label}
-					<tspan x="${offset}" dy="1.2em">Slot ${d.slot}</tspan>
+					<tspan x="${offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
+					<tspan x="${offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
 				</text>
 			`;
 		}
@@ -852,13 +859,14 @@ function realTimeChartMulti() {
 					stroke-width="2"
 				></line>
 				<text 
-					x="${offset}" 
-					y="${height - 23}" 
+					x="${offset * 1.5}" 
+					y="${height - 40}" 
 					font-size=".71em" 
 					fill="${d.color}"
 				>${d.label}
-					<tspan x="${offset}" dy="1.2em">Checkpoint </tspan>
-					<tspan x="${offset}" dy="1.2em">${d.slot}</tspan>
+					<tspan x="${offset * 1.5}" dy="1.2em">Checkpoint </tspan>
+					<tspan x="${offset * 1.5}" dy="1.2em">${d.slot}</tspan>
+					<tspan x="${offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
 				</text>
 			`;
 		}
