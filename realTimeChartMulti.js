@@ -400,7 +400,7 @@ function realTimeChartMulti() {
 				CHAINHEAD
 				------------------------------------------------------------------------------------ */
 
-			let chainhead_ts = new Date(new Date().getTime() - (SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
+			let chainhead_ts = now[0].time;
 			let chainhead_slot = "";
 			let chainhead_stake = 0;
 
@@ -414,7 +414,7 @@ function realTimeChartMulti() {
 				time: chainhead_ts,
 				slot: chainhead_slot,
 				stake: chainhead_stake,
-				color: "rgba(54, 149, 141, .17)"
+				color: "rgba(54, 149, 141, .67)"
 			}];
 
 			// create update selection
@@ -775,12 +775,6 @@ function realTimeChartMulti() {
 
 		function nowTemplate() {
 			return `
-				<circle 
-					cx="0" 
-					cy="0" 
-					r="${radius}" 
-					fill="red"
-				></circle>
 				<line
 					x1="0" 
 					x2="0" 
@@ -789,19 +783,20 @@ function realTimeChartMulti() {
 					stroke="red"
 					stroke-width="2"
 				></line>
-				<text 
-					x="${offset * 2}" 
-					y="${height - 14}" 
-					font-size=".71em" 
-					fill="red"
-				> ${new Date().toLocaleTimeString("en-US")}
-				</text>
 				<circle 
 					cx="0" 
 					cy="${height}" 
 					r="${radius}" 
 					fill="red"
 				></circle>
+				<text 
+					x="${offset * 2}" 
+					y="${height - 40}"  
+					font-size=".71em" 
+					fill="red"
+				>
+					<tspan x="${offset * 2}" dy="2.4em">${new Date().toLocaleTimeString("en-US")}</tspan>
+				</text>
 			`;
 		}
 
@@ -813,27 +808,28 @@ function realTimeChartMulti() {
 		function chainheadTemplate(d) {
 			return `
 				<circle 
-					cx="0" 
+					cx="${getSlotWidth(d)/2}" 
 					cy="${height - 70}" 
 					r="${radius}" 
 					fill="${d.color}"
 				></circle>
 				<line
-					x1="0" 
-					x2="0" 
+					x1="${getSlotWidth(d)/2}" 
+					x2="${getSlotWidth(d)/2}" 
 					y1="${height - 70 + radius}"
 					y2="${height}"
 					stroke="${d.color}"
 					stroke-width="2"
 				></line>
 				<text 
-					x="${offset * 1.5}" 
+					x="${getSlotWidth(d)/2 - offset * 1.5}"
 					y="${height - 40}" 
+					text-anchor="end" 
 					font-size=".71em" 
 					fill="${d.color}"
 				>${d.label}
-					<tspan x="${offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
-					<tspan x="${offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
+					<tspan x="${getSlotWidth(d)/2 - offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
+					<tspan x="${getSlotWidth(d)/2 - offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
 				</text>
 			`;
 		}
@@ -845,28 +841,27 @@ function realTimeChartMulti() {
 		function checkpointTemplate(d) {
 			return `
 				<circle 
-					cx="0" 
+					cx="${getSlotWidth(d)/2}" 
 					cy="${height - 70}" 
 					r="${radius}" 
 					fill="${d.color}"
 				></circle>
 				<line
-					x1="0" 
-					x2="0" 
+					x1="${getSlotWidth(d)/2}" 
+					x2="${getSlotWidth(d)/2}" 
 					y1="${height - 70 + radius}"
 					y2="${height}"
 					stroke="${d.color}"
-					stroke-width="2"
+					stroke-width=2
 				></line>
 				<text 
-					x="${offset * 1.5}" 
+					x="${getSlotWidth(d)/2 + offset * 1.5}" 
 					y="${height - 40}" 
 					font-size=".71em" 
 					fill="${d.color}"
-				>${d.label}
-					<tspan x="${offset * 1.5}" dy="1.2em">Checkpoint </tspan>
-					<tspan x="${offset * 1.5}" dy="1.2em">${d.slot}</tspan>
-					<tspan x="${offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
+				>${d.label} Checkpoint
+					<tspan x="${getSlotWidth(d)/2 + offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
+					<tspan x="${getSlotWidth(d)/2 + offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
 				</text>
 			`;
 		}
@@ -1022,7 +1017,16 @@ function realTimeChartMulti() {
 				}
 			}
 
-			let construction = `<line 
+			let construction = `
+			<line 
+				x1="0" 
+				x2="${width}" 
+				y1="${-(y(d.category) * 3/4)}"
+				y2="${-(y(d.category) * 3/4)}"
+				stroke="orange"
+				stroke-dasharray="10 5"
+			></line>
+			<line 
 				x1="0" 
 				x2="${width}" 
 				y1="${-(y(d.category) / 2)}"
@@ -1365,6 +1369,10 @@ function realTimeChartMulti() {
 		return chart;
 	}
 
+	chart.getData = function() {
+		return data;
+	}
+
 	chart.update = function (store) {
 		for (const datum of data) {
 			switch (datum.category) {
@@ -1385,4 +1393,4 @@ function realTimeChartMulti() {
 
 	return chart;
 
-} // end realTimeChart functionslac
+} // end realTimeChart function

@@ -21,6 +21,7 @@ async function init() {
 	let chart = realTimeChartMulti()
 		.xTitle("Time")
 		.yDomain([
+			"-",
 			// "Attestations",
 			"Blocks",
 			"Epochs",
@@ -83,7 +84,7 @@ async function init() {
 		URL: "/beacon/chainhead",
 		getChainhead: async function () {
 			let chainhead = await fetch(`${BASE_URL}${this.URL}`)
-				.then(response => response.json())
+				.then(res => res.json())
 				.then(d => d);
 			return chainhead;
 		}
@@ -93,8 +94,14 @@ async function init() {
 		PARTICIPATION_FOR_EPOCH_URL: "/validators/participation?epoch=",
 		getParticipationForEpoch: async function(param) {
 			return await fetch(`${BASE_URL}${this.PARTICIPATION_FOR_EPOCH_URL}${param}`)
-				.then(response => response.json())
-				.then(d => d);
+			.then(res => {
+				if (!res.ok) {
+					throw Error(res.statusText);
+				}
+				return res.json();
+			})
+			.then(d => d)
+			.catch(error => console.log(error));
 		}
 	}
 
@@ -103,13 +110,25 @@ async function init() {
 		EPOCH_URL: "/beacon/blocks?epoch=",
 		getBlock: async function (param) {
 			return await fetch(`${BASE_URL}${this.SLOT_URL}${param}`)
-				.then(response => response.json())
+				.then(res => res.json())
 				.then(d => (d.blockContainers.length === 1) ? d.blockContainers[0] : null);
 		},
 		getBlocksByEpoch: async function (param) {
-			return await fetch(`${BASE_URL}${this.EPOCH_URL}${param}`)
-				.then(response => response.json())
-				.then(d => d.blockContainers);
+			return await fetch(`${BASE_URL}${this.EPOCH_URL}${param}`, {
+				headers: {
+					'content-type': 'application/json'
+				}
+			})
+				.then(res => {
+					if (!res.ok) { throw Error(res.statusText);}
+					return res.json();
+				})
+				.then(d => d.blockContainers)
+				.catch(err => {
+					if (err.message.includes("Unexpected end of JSON input")) { console.log("Ignore Prysm gRPC error"); }
+					if (!err.message.includes("Unexpected end of JSON input")) { throw err; }
+				})
+				// empty string exception
 		},
 		getBlocksForPreviousEpochs: async function (headEpoch, finalizedEpoch) {
 			let blockContainersInPrevEpochs = [];
@@ -126,7 +145,11 @@ async function init() {
 			for (const epoch of prevEpochs) {
 
 				let pData = await VALIDATORS.getParticipationForEpoch(epoch);
-				chart.datum(createEpoch(epoch, participation));
+				if (pData)   {
+					chart.datum(createEpoch(epoch, pData.participation));
+				}
+
+				// TODO: Handle 404 for  last  epoch which does not have participation yet
 				
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
 
@@ -342,6 +365,10 @@ async function init() {
 	async function updateStatusFromChainhead() {
 		console.log("=========================== UPDATING STATUS FROM CHAINHEAD");
 		
+		// console.log("chart.data", chart.getData());
+		// let duplicates = checkDuplicateInObject("time", data.filter(d => d.category === "Blocks"));
+		// console.log("%cAny Duplicates?           ", "font-weight: bold", duplicates);
+		
 		chainhead = await CHAINHEAD.getChainhead();
 		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
 
@@ -399,7 +426,7 @@ async function init() {
 		};
 	}
 
-	function createScheduledEpoch(epoch) {
+	function createScheduledEpoch(epoch) {	
 		return {
 			category: "Epochs",
 			time: calculateTimeFromEpoch(epoch),
@@ -544,3 +571,23 @@ function getMaxSeconds(epochsAgo) {
 function calculateTime(slot) {
 	return new Date(new Date(NETWORK_GENESIS_TIME).getTime() + (slot * SECONDS_PER_SLOT * 1000))
 }
+
+function checkDuplicateInObject(propertyName, inputArray) {
+	let seenDuplicate = false,
+		testObject = {};
+  
+	inputArray.map(item => {
+	  let itemPropertyName = item[propertyName];    
+	  if (itemPropertyName in testObject) {
+		testObject[itemPropertyName].duplicate = true;
+		item.duplicate = true;
+		seenDuplicate = true;
+	  }
+	  else {
+		testObject[itemPropertyName] = item;
+		delete item.duplicate;
+	  }
+	});
+  
+	return seenDuplicate;
+  }

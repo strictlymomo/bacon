@@ -166,7 +166,7 @@ async function init() {
 			let counter = lastSlot;
 			while (store.headSlot + 1 > counter) {
 				let block = await BLOCKS.getBlock(counter);
-				console.log("block", block);
+				// console.log("block", block);
 				chart.datum(createBlock(block.block.slot, block.blockRoot, block.block.parent_root));
 				counter++;
 			}
@@ -359,7 +359,7 @@ async function init() {
 		console.log("=========================== UPDATING STATUS FROM CHAINHEAD");
 
 		chainhead = await CHAINHEAD.getChainhead();
-		console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
+		// console.log("%cChainhead:                 ", "font-weight: bold", chainhead);
 
 		store.finalizedSlot = parseInt(chainhead.finalizedSlot);
 		store.finalizedEpoch = parseInt(chainhead.finalizedEpoch);
