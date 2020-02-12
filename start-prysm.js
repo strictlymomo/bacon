@@ -21,7 +21,6 @@ async function init() {
 	let chart = realTimeChartMulti()
 		.xTitle("Time")
 		.yDomain([
-			"_",
 			// "Attestations",
 			"Blocks",
 			"Epochs",

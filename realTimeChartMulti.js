@@ -27,7 +27,8 @@ function realTimeChartMulti() {
 		showRoots = false,
 		showProposers = false,
 		showAttestations = false,
-		store;
+		store,
+		radius = 4;;
 
 	/* 	------------------------------------------------------------------------------------
 		create the chart
@@ -84,9 +85,9 @@ function realTimeChartMulti() {
 			.attr("id", "myClip")
 			.append("rect")
 			.attr("x", 0)
-			.attr("y", 0)
+			.attr("y", -radius)
 			.attr("width", width)
-			.attr("height", height);
+			.attr("height", height + radius * 2);
 
 		// create chart background
 		main.append("rect")
@@ -446,7 +447,7 @@ function realTimeChartMulti() {
 
 			let justification = [{
 				label: "Last Justified",
-				time: justification_ts, 
+				time: justification_ts,
 				slot: justification_slot,
 				color: "rgba(54, 149, 141, .67)"
 			}];
@@ -481,9 +482,9 @@ function realTimeChartMulti() {
 				finalization_slot = store.finalizedSlot;
 			}
 
-			let finalization = [{ 
+			let finalization = [{
 				label: "Last Finalized",
-				time: finalization_ts, 
+				time: finalization_ts,
 				slot: finalization_slot,
 				color: "rgba(54, 149, 141, 1)"
 			}];
@@ -767,11 +768,10 @@ function realTimeChartMulti() {
 			-------------------------------------- */
 
 		function nowTemplate() {
-			const radius = 4;
 			return `
 				<circle 
 					cx="0" 
-					cy="${height - radius}" 
+					cy="0" 
 					r="${radius}" 
 					fill="red"
 				></circle>
@@ -782,7 +782,21 @@ function realTimeChartMulti() {
 					y2="${height}"
 					stroke="red"
 					stroke-width="2"
-				></line>`;
+				></line>
+				<text 
+					x="${offset * 2}" 
+					y="${height - 14}" 
+					font-size=".71em" 
+					fill="red"
+				> ${new Date().toLocaleTimeString("en-US")}
+				</text>
+				<circle 
+					cx="0" 
+					cy="${height}" 
+					r="${radius}" 
+					fill="red"
+				></circle>
+			`;
 		}
 
 
@@ -791,30 +805,30 @@ function realTimeChartMulti() {
 			-------------------------------------- */
 
 		function chainheadTemplate(d) {
-			const radius = 4;
 			return `
-					<circle 
-						cx="0" 
-						cy="${height - radius}" 
-						r="${radius}" 
-						fill="${d.color}"
-					></circle>
-					<line
-						x1="0" 
-						x2="0" 
-						y1="0"
-						y2="${height}"
-						stroke="${d.color}"
-						stroke-width="2"
-					></line>
-					<text 
-						x="${offset}" 
-						y="${8}" 
-						font-size=".71em" 
-						fill="${d.color}"
-					>${d.label}
-						<tspan x="${offset}" dy="1.2em">${d.slot}</tspan>
-					</text>`;
+				<circle 
+					cx="0" 
+					cy="${height - 70}" 
+					r="${radius}" 
+					fill="${d.color}"
+				></circle>
+				<line
+					x1="0" 
+					x2="0" 
+					y1="${height - 70 + radius}"
+					y2="${height}"
+					stroke="${d.color}"
+					stroke-width="2"
+				></line>
+				<text 
+					x="${offset}" 
+					y="${height - 23}" 
+					font-size=".71em" 
+					fill="${d.color}"
+				>${d.label}
+					<tspan x="${offset}" dy="1.2em">Slot ${d.slot}</tspan>
+				</text>
+			`;
 		}
 
 		/* 	--------------------------------------
@@ -822,31 +836,31 @@ function realTimeChartMulti() {
 			-------------------------------------- */
 
 		function checkpointTemplate(d) {
-			const radius = 4;
 			return `
-					<circle 
-						cx="0" 
-						cy="${height - radius}" 
-						r="${radius}" 
-						fill="${d.color}"
-					></circle>
-					<line
-						x1="0" 
-						x2="0" 
-						y1="0"
-						y2="${height}"
-						stroke="${d.color}"
-						stroke-width="2"
-					></line>
-					<text 
-						x="${offset}" 
-						y="${8}" 
-						font-size=".71em" 
-						fill="${d.color}"
-					>${d.label}
-						<tspan x="${offset}" dy="1.2em">Checkpoint</tspan>
-						<tspan x="${offset}" dy="1.2em">${d.slot}</tspan>
-					</text>`;
+				<circle 
+					cx="0" 
+					cy="${height - 70}" 
+					r="${radius}" 
+					fill="${d.color}"
+				></circle>
+				<line
+					x1="0" 
+					x2="0" 
+					y1="${height - 70 + radius}"
+					y2="${height}"
+					stroke="${d.color}"
+					stroke-width="2"
+				></line>
+				<text 
+					x="${offset}" 
+					y="${height - 23}" 
+					font-size=".71em" 
+					fill="${d.color}"
+				>${d.label}
+					<tspan x="${offset}" dy="1.2em">Checkpoint </tspan>
+					<tspan x="${offset}" dy="1.2em">${d.slot}</tspan>
+				</text>
+			`;
 		}
 
 		/* 	--------------------------------------
@@ -896,7 +910,7 @@ function realTimeChartMulti() {
 				<rect 
 					class="block"
 					x="${0}"
-					y="${-(y(d.category) / 4)}" 
+					y="${-(y(d.category) / 2)}" 
 					width="${getSlotWidth(d) - 1}"
 					height="${y(d.category)}"
 					rx="${roundedCorner(d)}" 
@@ -912,7 +926,7 @@ function realTimeChartMulti() {
 						x1="0" 
 						x2="0" 
 						y1="${-(y(d.category))}"
-						y2="${y(d.category) * 3}"
+						y2="${y(d.category)}"
 						stroke="white"
 						stroke-opacity=".07"
 					></line>`
@@ -922,7 +936,7 @@ function realTimeChartMulti() {
 				text = `
 					<text 
 						x="${offset}"
-						y="${-(y(d.category) / 4) - 6}"
+						y="${-(y(d.category) / 2) - 6}"
 						font-size=".75em" 
 						fill="white"
 						opacity=".73"
@@ -952,7 +966,7 @@ function realTimeChartMulti() {
 						<rect 
 							class="block"
 							x="${0}"
-							y="${-(y(d.category) / 4)}" 
+							y="${-(y(d.category) / 2)}" 
 							width="${y(d.category)}"
 							height="${y(d.category)}"
 							rx="${roundedCorner(d)}" 
@@ -1000,6 +1014,55 @@ function realTimeChartMulti() {
 				}
 			}
 
+			let construction = `<line 
+				x1="0" 
+				x2="${width}" 
+				y1="${-(y(d.category) / 2)}"
+				y2="${-(y(d.category) / 2)}"
+				stroke="orange"
+				stroke-dasharray="10 5"
+			></line>
+			<line 
+				x1="0" 
+				x2="${width}" 
+				y1="${-(y(d.category) / 4)}"
+				y2="${-(y(d.category) / 4)}"
+				stroke="orange"
+				stroke-dasharray="10 5"
+			></line>
+			<line 
+				x1="0" 
+				x2="${width}" 
+				y1="0"
+				y2="0"
+				stroke="orange"
+				stroke-dasharray="10 5"
+			></line>
+			<line 
+				x1="0" 
+				x2="${width}" 
+				y1="${y(d.category) / 4}"
+				y2="${y(d.category) / 4}"
+				stroke="orange"
+				stroke-dasharray="10 5"
+			></line>
+			<line 
+				x1="0" 
+				x2="${width}" 
+				y1="${y(d.category) / 2}"
+				y2="${y(d.category) / 2}"
+				stroke="orange"
+				stroke-dasharray="10 5"
+			></line>
+			<line 
+				x1="0" 
+				x2="${width}" 
+				y1="${y(d.category) * 3 / 4}"
+				y2="${y(d.category) * 3 / 4}"
+				stroke="orange"
+				stroke-dasharray="10 5"
+			></line>`;
+
 			return `
 			${text}
 			${line}
@@ -1007,6 +1070,7 @@ function realTimeChartMulti() {
 			${content}
 			${/* TODO: ${votes_arr} */""}
 			`;
+			// ${construction}
 		}
 
 		function getSlotWidth(d) {
