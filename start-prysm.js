@@ -95,7 +95,7 @@ async function init() {
 		getParticipationForEpoch: async function(param) {
 			return await fetch(`${BASE_URL}${this.PARTICIPATION_FOR_EPOCH_URL}${param}`)
 			.then(res => {
-				return (res.status === "200" && res.body) ?  res.json() : null;
+				return (res.status === 200 && res.body) ? res.json() : null;
 			});
 		}
 	}
@@ -109,11 +109,7 @@ async function init() {
 				.then(d => (d.blockContainers.length === 1) ? d.blockContainers[0] : null);
 		},
 		getBlocksByEpoch: async function (param) {
-			return await fetch(`${BASE_URL}${this.EPOCH_URL}${param}`, {
-				headers: {
-					'content-type': 'application/json'
-				}
-			})
+			return await fetch(`${BASE_URL}${this.EPOCH_URL}${param}`)
 				.then(res => {
 					if (!res.ok) { 
 						throw Error(res.statusText);
@@ -124,8 +120,7 @@ async function init() {
 				.catch(err => {
 					if (err.message.includes("Unexpected end of JSON input")) { 
 						console.log("Error: gRPC Internal Server Error");
-						// TODO: placeholder blocks?
-						return [];
+						// return null;
 				}
 					if (!err.message.includes("Unexpected end of JSON input")) { throw err; }
 				})
@@ -144,31 +139,41 @@ async function init() {
 
 			for (const epoch of prevEpochs) {
 
+				// get participation data for epoch
 				let pData = await VALIDATORS.getParticipationForEpoch(epoch);
+				chart.datum(createEpoch(epoch, pData));
 				
-				chart.datum(createEpoch(epoch, pData.participation));
-				
+				// get blocks data for epoch
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
 
-				for (const [i, blockContainer] of blockContainersInEpoch.entries()) {
-					let currSlot = blockContainersInEpoch[i].block.block.slot;
-
-					if (currSlot > 0 && blockContainersInEpoch[i - 1]) {
-						// measure different with previous
-						let prevSlot = blockContainersInEpoch[i - 1].block.block.slot;
-						let difference = currSlot - prevSlot;
-						if (difference > 1) {
-							let counter = parseInt(prevSlot) + 1;
-							do {
-								difference--;
-								console.log(`%c                            ${counter}`, "color: orange");
-								chart.datum(createMissingBlock(counter));
-								counter++;
-							} while (difference > 1);
-						};
+				if (blockContainersInEpoch) {
+					
+					for (const [i, blockContainer] of blockContainersInEpoch.entries()) {
+						let currSlot = blockContainersInEpoch[i].block.block.slot;
+	
+						if (currSlot > 0 && blockContainersInEpoch[i - 1]) {
+							// measure different with previous
+							let prevSlot = blockContainersInEpoch[i - 1].block.block.slot;
+							let difference = currSlot - prevSlot;
+							if (difference > 1) {
+								let counter = parseInt(prevSlot) + 1;
+								do {
+									difference--;
+									console.log(`%c                            ${counter}`, "color: orange");
+									chart.datum(createMissingBlock(counter));
+									counter++;
+								} while (difference > 1);
+							};
+						}
+						console.log("                           ", blockContainer.block.block.slot, "   |   ", base64toHEX(blockContainer.block.block.parentRoot).substr(2, 4), " / ", base64toHEX(blockContainer.blockRoot).substr(2, 4), "   |   ", parseInt((blockContainer.block.block.slot) % SLOTS_PER_EPOCH), "   |   ", calculateStatus(blockContainer.block.block.slot), "   |   ", calculateEpoch(blockContainer.block.block.slot));
+						chart.datum(createBlock(blockContainer.block.block.slot, blockContainer.blockRoot, blockContainer.block.block.parentRoot));
 					}
-					console.log("                           ", blockContainer.block.block.slot, "   |   ", base64toHEX(blockContainer.block.block.parentRoot).substr(2, 4), " / ", base64toHEX(blockContainer.blockRoot).substr(2, 4), "   |   ", parseInt((blockContainer.block.block.slot) % SLOTS_PER_EPOCH), "   |   ", calculateStatus(blockContainer.block.block.slot), "   |   ", calculateEpoch(blockContainer.block.block.slot));
-					chart.datum(createBlock(blockContainer.block.block.slot, blockContainer.blockRoot, blockContainer.block.block.parentRoot));
+
+				} 
+
+				else if (blockContainersInEpoch === null) {
+					// TODO create indication that data for this epoch is not available
+					
 				}
 			}
 		},
@@ -408,23 +413,23 @@ async function init() {
 		}
 	}
 
-	function createEpoch(epoch, participate) {
+	function createEpoch(epoch, pData) {
 		let ep = {
 			category: "Epochs",
 			time: calculateTimeFromEpoch(epoch),
 			label: epoch,
 			status: "",
 			participation: {
-				globalParticipationRate: "N/A",
+				globalParticipationRate: 0,
 				votedEther: 0,
 				eligibleEther: 1 // hack
 			}
 		}
 
-		if (participate) {
-			ep.participation.globalParticipationRate = participate.globalParticipationRate;
-			ep.participation.votedEther = parseInt(participate.votedEther);
-			ep.participation.eligibleEther = parseInt(participate.eligibleEther);
+		if (pData) {
+			ep.participation.globalParticipationRate = pData.participation.globalParticipationRate;
+			ep.participation.votedEther = parseInt(pData.participation.votedEther);
+			ep.participation.eligibleEther = parseInt(pData.participation.eligibleEther);
 		}
 
 		return ep;
@@ -437,7 +442,7 @@ async function init() {
 			label: epoch,
 			status: "scheduled",
 			participation: {
-				globalParticipationRate: "N/A",
+				globalParticipationRate: 0,
 				votedEther: 0,
 				eligibleEther: 1 // hack
 			}
