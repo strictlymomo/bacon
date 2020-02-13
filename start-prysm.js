@@ -119,8 +119,8 @@ async function init() {
 				.then(d => d.blockContainers)
 				.catch(err => {
 					if (err.message.includes("Unexpected end of JSON input")) { 
-						console.log("Error: gRPC Internal Server Error");
-						// return null;
+						console.log("                            gRPC Error: Could not get blocks for epoch");
+						return null;
 				}
 					if (!err.message.includes("Unexpected end of JSON input")) { throw err; }
 				})
@@ -139,13 +139,14 @@ async function init() {
 
 			for (const epoch of prevEpochs) {
 
-				// get participation data for epoch
+				// get epoch participation data
 				let pData = await VALIDATORS.getParticipationForEpoch(epoch);
 				chart.datum(createEpoch(epoch, pData));
 				
-				// get blocks data for epoch
+				// get blocks in epoch
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
 
+				// got list of blocks
 				if (blockContainersInEpoch) {
 					
 					for (const [i, blockContainer] of blockContainersInEpoch.entries()) {
@@ -170,10 +171,14 @@ async function init() {
 					}
 
 				} 
-
-				else if (blockContainersInEpoch === null) {
-					// TODO create indication that data for this epoch is not available
-					
+				// fallback
+				if (blockContainersInEpoch === null) {
+					console.log(`%c                            EPOCH ${epoch}: Get blocks manually.`, "color: grey");
+					let headSlot = epoch * SLOTS_PER_EPOCH;
+					for (let i = headSlot; i < headSlot + SLOTS_PER_EPOCH; i++) {
+						let blockContainer = await BLOCKS.getBlock(i);
+						blockContainer ? chart.datum(createBlock(blockContainer.block.block.slot, blockContainer.blockRoot, blockContainer.block.block.parentRoot)) : chart.datum(createMissingBlock(i));
+					}
 				}
 			}
 		},
@@ -183,7 +188,7 @@ async function init() {
 
 	let store = {
 		
-		// current
+		// current - counter used by the poller to track diff between scheduled and head slots
 		currentSlot: null,
 		currentEpoch: null,
 
@@ -455,6 +460,8 @@ async function init() {
 
 		store.currentSlot = Math.floor((now - genesis) / 12);
 		store.currentEpoch = Math.floor(store.currentSlot / 32);
+
+		store.scheduledSlot = Math.floor((now - genesis) / 12);
 		store.scheduledEpoch = store.currentEpoch + 1;
 	}
 
@@ -518,8 +525,8 @@ async function init() {
 
 	function updateStatusTemplate() {
 		let data = [store];
-		d3.selectAll("#current-slot").data(data).text(d => d.currentSlot);
-		d3.selectAll("#current-epoch").data(data).text(d => d.currentEpoch);
+		d3.selectAll("#scheduled-slot").data(data).text(d => d.scheduledSlot);
+		d3.selectAll("#scheduled-epoch").data(data).text(d => d.scheduledEpoch);
 		d3.selectAll("#head-slot").data(data).text(d => d.headSlot);
 		d3.selectAll("#head-epoch").data(data).text(d => d.headEpoch);
 		d3.selectAll("#head-delta").data(data).text(d => calculateEpochDelta(d.currentEpoch, d.headEpoch, "head"));
@@ -529,7 +536,7 @@ async function init() {
 		d3.selectAll("#finalized-slot").data(data).text(d => d.finalizedSlot);
 		d3.selectAll("#finalized-epoch").data(data).text(d => d.finalizedEpoch);
 		d3.selectAll("#finalized-delta").data(data).text(d => calculateEpochDelta(d.currentEpoch, d.finalizedEpoch, "finalized"));
-		d3.selectAll("#transition-countdown-slot").data(data).text(d => d.scheduledEpoch * SLOTS_PER_EPOCH - d.currentSlot);
+		d3.selectAll("#transition-countdown-slot").data(data).text(d => d.scheduledEpoch * SLOTS_PER_EPOCH - d.scheduledSlot);
 	}
 
 	function calculateEpochDelta(cur, val, type) {
