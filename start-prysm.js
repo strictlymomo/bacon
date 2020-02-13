@@ -95,13 +95,8 @@ async function init() {
 		getParticipationForEpoch: async function(param) {
 			return await fetch(`${BASE_URL}${this.PARTICIPATION_FOR_EPOCH_URL}${param}`)
 			.then(res => {
-				if (!res.ok) {
-					throw Error(res.statusText);
-				}
-				return res.json();
-			})
-			.then(d => d)
-			.catch(error => console.log(error));
+				return (res.status === "200" && res.body) ?  res.json() : null;
+			});
 		}
 	}
 
@@ -120,15 +115,20 @@ async function init() {
 				}
 			})
 				.then(res => {
-					if (!res.ok) { throw Error(res.statusText);}
+					if (!res.ok) { 
+						throw Error(res.statusText);
+					}
 					return res.json();
 				})
 				.then(d => d.blockContainers)
 				.catch(err => {
-					if (err.message.includes("Unexpected end of JSON input")) { console.log("Ignore Prysm gRPC error"); }
+					if (err.message.includes("Unexpected end of JSON input")) { 
+						console.log("Error: gRPC Internal Server Error");
+						// TODO: placeholder blocks?
+						return [];
+				}
 					if (!err.message.includes("Unexpected end of JSON input")) { throw err; }
 				})
-				// empty string exception
 		},
 		getBlocksForPreviousEpochs: async function (headEpoch, finalizedEpoch) {
 			let blockContainersInPrevEpochs = [];
@@ -145,11 +145,8 @@ async function init() {
 			for (const epoch of prevEpochs) {
 
 				let pData = await VALIDATORS.getParticipationForEpoch(epoch);
-				if (pData)   {
-					chart.datum(createEpoch(epoch, pData.participation));
-				}
-
-				// TODO: Handle 404 for  last  epoch which does not have participation yet
+				
+				chart.datum(createEpoch(epoch, pData.participation));
 				
 				let blockContainersInEpoch = await this.getBlocksByEpoch(epoch);
 
@@ -412,17 +409,25 @@ async function init() {
 	}
 
 	function createEpoch(epoch, participate) {
-		return {
+		let ep = {
 			category: "Epochs",
 			time: calculateTimeFromEpoch(epoch),
 			label: epoch,
 			status: "",
 			participation: {
-				globalParticipationRate: participate.globalParticipationRate,
-				votedEther: parseInt(participate.votedEther),
-				eligibleEther: parseInt(participate.eligibleEther)
+				globalParticipationRate: "N/A",
+				votedEther: 0,
+				eligibleEther: 1 // hack
 			}
-		};
+		}
+
+		if (participate) {
+			ep.participation.globalParticipationRate = participate.globalParticipationRate;
+			ep.participation.votedEther = parseInt(participate.votedEther);
+			ep.participation.eligibleEther = parseInt(participate.eligibleEther);
+		}
+
+		return ep;
 	}
 
 	function createScheduledEpoch(epoch) {	
@@ -432,9 +437,9 @@ async function init() {
 			label: epoch,
 			status: "scheduled",
 			participation: {
-				globalParticipationRate: 0,
+				globalParticipationRate: "N/A",
 				votedEther: 0,
-				eligibleEther: parseInt("120255100000000")
+				eligibleEther: 1 // hack
 			}
 		};
 	}
@@ -589,4 +594,4 @@ function checkDuplicateInObject(propertyName, inputArray) {
 	});
   
 	return seenDuplicate;
-  }
+}
