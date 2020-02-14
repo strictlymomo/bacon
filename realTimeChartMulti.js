@@ -439,79 +439,73 @@ function realTimeChartMulti() {
 				JUSTIFICATION CHECKPOINT
 				------------------------------------------------------------------------------------ */
 
-			let justification_ts = new Date(new Date().getTime() - (2 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
-			let justification_slot = "";
-			let justification_stake = 66;
-
 			if (store) {
-				justification_ts = calculateTime(store.justifiedSlot);
-				justification_slot = store.justifiedSlot;
+				let jData = data.filter(d => d.category === "Epochs").filter(d => d.label === store.justifiedEpoch);
+				
+				if (jData.length !== 0) {
+					let justification = [{
+						label: "Last Justified",
+						time: calculateTime(store.justifiedSlot),
+						slot: store.justifiedSlot,
+						stake: Math.round(jData[0].participation.globalParticipationRate * 100).toFixed(1),
+						color: "rgba(54, 149, 141, .67)"
+					}];
+	
+					// create update selection
+					let updateJustificationSel = justificationG.selectAll(".justification")
+						.data(justification);
+	
+					// remove items
+					updateJustificationSel.exit().remove();
+	
+					// add items
+					updateJustificationSel.enter()
+						.append("g")
+						.attr("class", "justification")
+						.attr("transform", d => translateCheckpoint(d))
+						.html(d => checkpointTemplate(d));
+	
+					updateJustificationSel
+						.attr("transform", d => translateCheckpoint(d))
+						.html(d => checkpointTemplate(d));
+				}
 			}
-
-			let justification = [{
-				label: "Last Justified",
-				time: justification_ts,
-				slot: justification_slot,
-				stake: justification_stake,
-				color: "rgba(54, 149, 141, .67)"
-			}];
-
-			// create update selection
-			let updateJustificationSel = justificationG.selectAll(".justification")
-				.data(justification);
-
-			// remove items
-			updateJustificationSel.exit().remove();
-
-			// add items
-			updateJustificationSel.enter()
-				.append("g")
-				.attr("class", "justification")
-				.attr("transform", d => translateCheckpoint(d))
-				.html(d => checkpointTemplate(d));
-
-			updateJustificationSel
-				.attr("transform", d => translateCheckpoint(d))
-				.html(d => checkpointTemplate(d));
 
 			/* 	------------------------------------------------------------------------------------
 				FINALIZATION CHECKPOINT
 				------------------------------------------------------------------------------------ */
 
-			let finalization_ts = new Date(new Date().getTime() - (3 * SLOTS_PER_EPOCH * SECONDS_PER_SLOT * 1000));
-			let finalization_slot = "";
-			let finalization_stake = 66;
-
 			if (store) {
-				finalization_ts = calculateTime(store.finalizedSlot);
-				finalization_slot = store.finalizedSlot;
+				let fData = data.filter(d => d.category === "Epochs").filter(d => d.label === store.finalizedEpoch);
+
+				if (fData.length !== 0) {
+					let finalization = [{
+						label: "Last Finalized",
+						time: calculateTime(store.finalizedSlot),
+						slot: store.finalizedSlot,
+						stake: Math.round(fData[0].participation.globalParticipationRate * 100).toFixed(1),
+						color: "rgba(54, 149, 141, 1)"
+					}];
+
+					// create update selection
+					let updatefinalizationSel = finalizationG.selectAll(".finalization")
+						.data(finalization);
+
+					// remove items
+					updatefinalizationSel.exit().remove();
+
+					// add items
+					updatefinalizationSel.enter()
+						.append("g")
+						.attr("class", "finalization")
+						.attr("transform", d => translateCheckpoint(d))
+						.html(d => checkpointTemplate(d));
+
+					updatefinalizationSel
+						.attr("transform", d => translateCheckpoint(d))
+						.html(d => checkpointTemplate(d));
+				}
 			}
-
-			let finalization = [{
-				label: "Last Finalized",
-				time: finalization_ts,
-				slot: finalization_slot,
-				stake: finalization_stake,
-				color: "rgba(54, 149, 141, 1)"
-			}];
-
-			// create update selection
-			let updatefinalizationSel = finalizationG.selectAll(".finalization")
-				.data(finalization);
-
-			// remove items
-			updatefinalizationSel.exit().remove();
-
-			// add items
-			updatefinalizationSel.enter()
-				.append("g")
-				.attr("class", "finalization")
-				.attr("transform", d => translateCheckpoint(d))
-				.html(d => checkpointTemplate(d));
-
-			updatefinalizationSel
-				.attr("transform", d => translateCheckpoint(d))
-				.html(d => checkpointTemplate(d));
 
 			/* 	------------------------------------------------------------------------------------
 				EPOCHS
@@ -808,28 +802,28 @@ function realTimeChartMulti() {
 		function chainheadTemplate(d) {
 			return `
 				<circle 
-					cx="${getSlotWidth(d)/2}" 
+					cx="${getSlotWidth(d) / 2}" 
 					cy="${height - 70}" 
 					r="${radius}" 
 					fill="${d.color}"
 				></circle>
 				<line
-					x1="${getSlotWidth(d)/2}" 
-					x2="${getSlotWidth(d)/2}" 
+					x1="${getSlotWidth(d) / 2}" 
+					x2="${getSlotWidth(d) / 2}" 
 					y1="${height - 70 + radius}"
 					y2="${height}"
 					stroke="${d.color}"
 					stroke-width="2"
 				></line>
 				<text 
-					x="${getSlotWidth(d)/2 - offset * 1.5}"
+					x="${getSlotWidth(d) / 2 - offset * 1.5}"
 					y="${height - 40}" 
 					text-anchor="end" 
 					font-size=".71em" 
 					fill="${d.color}"
 				>${d.label}
-					<tspan x="${getSlotWidth(d)/2 - offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
-					<tspan x="${getSlotWidth(d)/2 - offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
+					<tspan x="${getSlotWidth(d) / 2 - offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
+					<tspan x="${getSlotWidth(d) / 2 - offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
 				</text>
 			`;
 		}
@@ -841,27 +835,27 @@ function realTimeChartMulti() {
 		function checkpointTemplate(d) {
 			return `
 				<circle 
-					cx="${getSlotWidth(d)/2}" 
+					cx="${getSlotWidth(d) / 2}" 
 					cy="${height - 70}" 
 					r="${radius}" 
 					fill="${d.color}"
 				></circle>
 				<line
-					x1="${getSlotWidth(d)/2}" 
-					x2="${getSlotWidth(d)/2}" 
+					x1="${getSlotWidth(d) / 2}" 
+					x2="${getSlotWidth(d) / 2}" 
 					y1="${height - 70 + radius}"
 					y2="${height}"
 					stroke="${d.color}"
 					stroke-width=2
 				></line>
 				<text 
-					x="${getSlotWidth(d)/2 + offset * 1.5}" 
+					x="${getSlotWidth(d) / 2 + offset * 1.5}" 
 					y="${height - 40}" 
 					font-size=".71em" 
 					fill="${d.color}"
 				>${d.label} Checkpoint
-					<tspan x="${getSlotWidth(d)/2 + offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
-					<tspan x="${getSlotWidth(d)/2 + offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
+					<tspan x="${getSlotWidth(d) / 2 + offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
+					<tspan x="${getSlotWidth(d) / 2 + offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
 				</text>
 			`;
 		}
@@ -1021,8 +1015,8 @@ function realTimeChartMulti() {
 			<line 
 				x1="0" 
 				x2="${width}" 
-				y1="${-(y(d.category) * 3/4)}"
-				y2="${-(y(d.category) * 3/4)}"
+				y1="${-(y(d.category) * 3 / 4)}"
+				y2="${-(y(d.category) * 3 / 4)}"
 				stroke="orange"
 				stroke-dasharray="10 5"
 			></line>
@@ -1369,7 +1363,7 @@ function realTimeChartMulti() {
 		return chart;
 	}
 
-	chart.getData = function() {
+	chart.getData = function () {
 		return data;
 	}
 
