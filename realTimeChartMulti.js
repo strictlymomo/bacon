@@ -396,50 +396,41 @@ function realTimeChartMulti() {
 				.attr("transform", d => translateNow(d))
 				.html(d => nowTemplate());
 
-			/* 	------------------------------------------------------------------------------------
-				CHAINHEAD
-				------------------------------------------------------------------------------------ */
-
-			let chainhead_ts = now[0].time;
-			let chainhead_slot = "";
-			let chainhead_stake = 0;
-
 			if (store) {
-				chainhead_ts = calculateTime(store.headSlot);
-				chainhead_slot = store.headSlot;
-			}
 
-			let chainhead = [{
-				label: "Chainhead",
-				time: chainhead_ts,
-				slot: chainhead_slot,
-				stake: chainhead_stake,
-				color: "rgba(54, 149, 141, .67)"
-			}];
+				/* 	------------------------------------------------------------------------------------
+					CHAINHEAD
+					------------------------------------------------------------------------------------ */
 
-			// create update selection
-			let updateChainheadSel = chainheadG.selectAll(".chainhead")
-				.data(chainhead);
+				let chainhead = [{
+					label: "Chainhead",
+					time: calculateTime(store.headSlot),
+					slot: store.headSlot,
+					color: "rgba(54, 149, 141, .67)"
+				}];
+	
+				// create update selection
+				let updateChainheadSel = chainheadG.selectAll(".chainhead")
+					.data(chainhead);
+	
+				// remove items
+				updateChainheadSel.exit().remove();
+	
+				// add items
+				updateChainheadSel.enter()
+					.append("g")
+					.attr("class", "chainhead")
+					.attr("transform", d => translateChainhead(d))
+					.html(d => chainheadTemplate(d));
+	
+				updateChainheadSel
+					.attr("transform", d => translateChainhead(d))
+					.html(d => chainheadTemplate(d));
 
-			// remove items
-			updateChainheadSel.exit().remove();
+				/* 	------------------------------------------------------------------------------------
+					JUSTIFICATION CHECKPOINT
+					------------------------------------------------------------------------------------ */
 
-			// add items
-			updateChainheadSel.enter()
-				.append("g")
-				.attr("class", "chainhead")
-				.attr("transform", d => translateChainhead(d))
-				.html(d => chainheadTemplate(d));
-
-			updateChainheadSel
-				.attr("transform", d => translateChainhead(d))
-				.html(d => chainheadTemplate(d));
-
-			/* 	------------------------------------------------------------------------------------
-				JUSTIFICATION CHECKPOINT
-				------------------------------------------------------------------------------------ */
-
-			if (store) {
 				let jData = data.filter(d => d.category === "Epochs").filter(d => d.label === store.justifiedEpoch);
 				
 				if (jData.length !== 0) {
@@ -469,13 +460,11 @@ function realTimeChartMulti() {
 						.attr("transform", d => translateCheckpoint(d))
 						.html(d => checkpointTemplate(d));
 				}
-			}
 
-			/* 	------------------------------------------------------------------------------------
-				FINALIZATION CHECKPOINT
-				------------------------------------------------------------------------------------ */
+				/* 	------------------------------------------------------------------------------------
+					FINALIZATION CHECKPOINT
+					------------------------------------------------------------------------------------ */
 
-			if (store) {
 				let fData = data.filter(d => d.category === "Epochs").filter(d => d.label === store.finalizedEpoch);
 
 				if (fData.length !== 0) {
@@ -505,6 +494,7 @@ function realTimeChartMulti() {
 						.attr("transform", d => translateCheckpoint(d))
 						.html(d => checkpointTemplate(d));
 				}
+				
 			}
 
 			/* 	------------------------------------------------------------------------------------
@@ -823,7 +813,6 @@ function realTimeChartMulti() {
 					fill="${d.color}"
 				>${d.label}
 					<tspan x="${getSlotWidth(d) / 2 - offset * 1.5}" dy="1.2em">Slot ${d.slot}</tspan>
-					<tspan x="${getSlotWidth(d) / 2 - offset * 1.5}" dy="1.2em">Stake ${d.stake}%</tspan>
 				</text>
 			`;
 		}
