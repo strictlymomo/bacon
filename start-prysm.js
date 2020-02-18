@@ -41,11 +41,6 @@ async function init() {
 	/* 	-----------------------------------
 		Event Handlers
 		----------------------------------- */
-	d3.select("#debug").on("change", function () {
-		let state = d3.select(this).property("checked");
-		chart.debug(state);
-	});
-
 	d3.select("#halt").on("change", function () {
 		let state = d3.select(this).property("checked");
 		chart.halt(state);
@@ -59,16 +54,6 @@ async function init() {
 		let state = d3.select(this).property("checked");
 		chart.showRoots(state);
 	});
-
-	d3.select("#show-proposers").on("change", function () {
-		let state = d3.select(this).property("checked");
-		chart.showProposers(state);
-	});
-
-	d3.select("#show-attestations").on("change", function () {
-		let state = d3.select(this).property("checked");
-		chart.showAttestations(state);
-	});	
 
 	/* 	-----------------------------------
 		Prysm Data
