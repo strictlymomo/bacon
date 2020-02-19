@@ -62,7 +62,6 @@ async function init() {
 	// Node API    
 	const BASE_URL = "https://api.prylabs.net/eth/v1alpha1";
 	const NORMAL_INTERVAL = 12000;
-	const SLEEP_INTERVAL = 1000;
 	let pollInterval = NORMAL_INTERVAL;
 
 	const CHAINHEAD = {
@@ -111,7 +110,6 @@ async function init() {
 				})
 		},
 		getBlocksForPreviousEpochs: async function (headEpoch, finalizedEpoch) {
-			let blockContainersInPrevEpochs = [];
 			let prevEpochs = enumeratePreviousEpochs(headEpoch, finalizedEpoch - 2);
 
 			console.log("prevEpochs:                ", prevEpochs);
@@ -208,8 +206,8 @@ async function init() {
 	await getInitial();
 
 	// Poll for updates
-	let poller = setInterval(() => poll(), pollInterval);
-	let epochPoller = setInterval(() => epochPoll(), SLOTS_PER_EPOCH * SLOT_INTERVAL);
+	setInterval(() => poll(), pollInterval);
+	setInterval(() => epochPoll(), SLOTS_PER_EPOCH * SLOT_INTERVAL);
 
 	async function epochPoll() {
 		console.log("=========================== EPOCH POLL");
@@ -473,29 +471,8 @@ async function init() {
 		return slotStatus;
 	}
 
-	function formatTime(t) {
-		if (t < 0) t = 0;
-		if (t > 12) t = 12;
-
-		t += "";
-
-		if (t.indexOf(".") === -1) t += ".0";
-
-		t += "s";
-
-		return t
-	}
-
-	function consecutive(a, b) {
-		let arr = [];
-		for (b; b >= a; b--) {
-			arr.push(b);
-		}
-		return arr.reverse();
-	}
-
 	function pause(e) {
-		if (e.keyCode == 32) {
+		if (e.keyCode === 32) {
 			let state = d3.select("#halt").property("checked");
 			if (state === false) {
 				d3.select("#halt").property("checked", true);
@@ -560,7 +537,7 @@ function base64toHEX(base64) {
 	let hex = "0x";
 	for (let i = 0; i < raw.length; i++) {
 		let _hex = raw.charCodeAt(i).toString(16)
-		hex += (_hex.length == 2 ? _hex : "0" + _hex);
+		hex += (_hex.length === 2 ? _hex : "0" + _hex);
 	}
 	return hex;
 }

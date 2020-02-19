@@ -28,7 +28,7 @@ function realTimeChartMulti() {
 		showProposers = false,
 		showAttestations = false,
 		store,
-		radius = 4;;
+		radius = 4;
 
 	/* 	------------------------------------------------------------------------------------
 		create the chart
@@ -297,7 +297,6 @@ function realTimeChartMulti() {
 
 		// update axis with modified scale
 		xAxis.scale(x)(xAxisG);
-		// yAxis.scale(y)(yAxisG);
 		xAxisNav.scale(xNav)(xAxisGNav);
 
 		/* 	----------------------------------------
@@ -364,13 +363,7 @@ function realTimeChartMulti() {
 		function refresh() {
 
 			// process data to remove too late data items 
-			data = data.filter(d => {
-				if (d.time.getTime() > startTime.getTime()) return true;
-			})
-
-			// determine number of categories
-			let categoryCount = yDomain.length;
-			if (debug) console.log("yDomain", yDomain)
+			data = data.filter(d => (d.time.getTime() > startTime.getTime()) ? true : false)
 
 			/* 	------------------------------------------------------------------------------------
 				NOW
@@ -1234,7 +1227,7 @@ function realTimeChartMulti() {
 	// new data item (this most recent item will appear 
 	// on the right side of the chart, and begin moving left)
 	chart.datum = function (_) {
-		if (arguments.length == 0) return datum;
+		if (arguments.length === 0) return datum;
 		datum = _;
 		data.push(datum);
 		return chart;
@@ -1242,42 +1235,42 @@ function realTimeChartMulti() {
 
 	// svg width
 	chart.width = function (_) {
-		if (arguments.length == 0) return svgWidth;
+		if (arguments.length === 0) return svgWidth;
 		svgWidth = _;
 		return chart;
 	}
 
 	// svg height
 	chart.height = function (_) {
-		if (arguments.length == 0) return svgHeight;
+		if (arguments.length === 0) return svgHeight;
 		svgHeight = _;
 		return chart;
 	}
 
 	// svg border
 	chart.border = function (_) {
-		if (arguments.length == 0) return border;
+		if (arguments.length === 0) return border;
 		border = _;
 		return chart;
 	}
 
 	// x axis title
 	chart.xTitle = function (_) {
-		if (arguments.length == 0) return xTitle;
+		if (arguments.length === 0) return xTitle;
 		xTitle = _;
 		return chart;
 	}
 
 	// y axis title
 	chart.yTitle = function (_) {
-		if (arguments.length == 0) return yTitle;
+		if (arguments.length === 0) return yTitle;
 		yTitle = _;
 		return chart;
 	}
 
 	// yItems (can be dynamically added after chart construction)
 	chart.yDomain = function (_) {
-		if (arguments.length == 0) return yDomain;
+		if (arguments.length === 0) return yDomain;
 		yDomain = _;
 		if (svg) {
 			// update the y ordinal scale
@@ -1292,62 +1285,62 @@ function realTimeChartMulti() {
 
 	// background color
 	chart.backgroundColor = function (_) {
-		if (arguments.length == 0) return backgroundColor;
+		if (arguments.length === 0) return backgroundColor;
 		backgroundColor = _;
 		return chart;
 	}
 
 	// timeframe
 	chart.maxSeconds = function (_) {
-		if (arguments.length == 0) return maxSeconds;
+		if (arguments.length === 0) return maxSeconds;
 		maxSeconds = _;
 		return chart;
 	}
 
 	// timeframe
 	chart.headSlotTimeOffset = function (_) {
-		if (arguments.length == 0) return headSlotTimeOffset;
+		if (arguments.length === 0) return headSlotTimeOffset;
 		headSlotTimeOffset = _;
 		return chart;
 	}
 
 	// debug
 	chart.debug = function (_) {
-		if (arguments.length == 0) return debug;
+		if (arguments.length === 0) return debug;
 		debug = _;
 		return chart;
 	}
 
 	// halt
 	chart.halt = function (_) {
-		if (arguments.length == 0) return halted;
+		if (arguments.length === 0) return halted;
 		halted = _;
 		return chart;
 	}
 
 	// show roots
 	chart.showRoots = function (_) {
-		if (arguments.length == 0) return showRoots;
+		if (arguments.length === 0) return showRoots;
 		showRoots = _;
 		return chart;
 	}
 
 	// show proposers
 	chart.showProposers = function (_) {
-		if (arguments.length == 0) return showProposers;
+		if (arguments.length === 0) return showProposers;
 		showProposers = _;
 		return chart;
 	}
 
 	// show proposers
 	chart.showAttestations = function (_) {
-		if (arguments.length == 0) return showAttestations;
+		if (arguments.length === 0) return showAttestations;
 		showAttestations = _;
 		return chart;
 	}
 
 	chart.store = function (_) {
-		if (arguments.length == 0) return store;
+		if (arguments.length === 0) return store;
 		store = _;
 		return chart;
 	}
@@ -1364,11 +1357,15 @@ function realTimeChartMulti() {
 					else if (datum.label < store.nextEpochTransition && datum.label > store.justifiedEpoch) datum.status = "pending";
 					else if (datum.label <= store.justifiedEpoch && datum.label > store.finalizedEpoch) datum.status = "justified";
 					else if (datum.label <= store.finalizedEpoch) datum.status = "finalized";
+					break;
 				case "Blocks":
 					if (datum.status === "justified")
 						if (datum.slot <= store.finalizedSlot) datum.status = "finalized";
 					if (datum.status === "proposed")
 						if (datum.slot > store.finalizedSlot && datum.slot <= store.justifiedSlot) datum.status = "justified";
+					break;
+				default:
+					return;	
 			}
 		}
 		return chart;
