@@ -401,21 +401,21 @@ function realTimeChartMulti() {
 					slot: store.headSlot,
 					color: "rgba(54, 149, 141, .67)"
 				}];
-	
+
 				// create update selection
 				let updateChainheadSel = chainheadG.selectAll(".chainhead")
 					.data(chainhead);
-	
+
 				// remove items
 				updateChainheadSel.exit().remove();
-	
+
 				// add items
 				updateChainheadSel.enter()
 					.append("g")
 					.attr("class", "chainhead")
 					.attr("transform", d => translateChainhead(d))
 					.html(d => chainheadTemplate(d));
-	
+
 				updateChainheadSel
 					.attr("transform", d => translateChainhead(d))
 					.html(d => chainheadTemplate(d));
@@ -425,7 +425,7 @@ function realTimeChartMulti() {
 					------------------------------------------------------------------------------------ */
 
 				let jData = data.filter(d => d.category === "Epochs").filter(d => d.label === store.justifiedEpoch);
-				
+
 				if (jData.length !== 0) {
 					let justification = [{
 						label: "Last Justified",
@@ -434,21 +434,21 @@ function realTimeChartMulti() {
 						stake: Math.round(jData[0].participation.globalParticipationRate * 100).toFixed(1),
 						color: "rgba(54, 149, 141, .67)"
 					}];
-	
+
 					// create update selection
 					let updateJustificationSel = justificationG.selectAll(".justification")
 						.data(justification);
-	
+
 					// remove items
 					updateJustificationSel.exit().remove();
-	
+
 					// add items
 					updateJustificationSel.enter()
 						.append("g")
 						.attr("class", "justification")
 						.attr("transform", d => translateCheckpoint(d))
 						.html(d => checkpointTemplate(d));
-	
+
 					updateJustificationSel
 						.attr("transform", d => translateCheckpoint(d))
 						.html(d => checkpointTemplate(d));
@@ -487,7 +487,7 @@ function realTimeChartMulti() {
 						.attr("transform", d => translateCheckpoint(d))
 						.html(d => checkpointTemplate(d));
 				}
-				
+
 			}
 
 			/* 	------------------------------------------------------------------------------------
@@ -590,13 +590,22 @@ function realTimeChartMulti() {
 				// update items; added items are now part of the update selection
 				updateRootsSel
 					.attr("d", (d, i) => {
-						const x0 = Math.round(x(d.time)) + (slotWidth / 2),
-							y0 = y(d.category) * 1.75,
+						let x0 = Math.round(x(d.time)) + (slotWidth / 2),
+							y0 = y(d.category) * 1.5,
 							x1 = getPreviousRootPosition(updateRootsSel, i) + (slotWidth * (3 / 4)),
 							y1 = y0,
 							cpx = x1 + ((x0 - x1) * .5),
-							cpy = y(d.category) * 1.75 + (1 * y(d.category) / 8) + offset + 1,
+							cpy = (y(d.category) * 1.5) + (1 * y(d.category) / 8) + offset + 1,
 							path = d3.path();
+						// square
+						if (getSlotWidth(d) > `${y(d.category)}`) {
+							x0 = Math.round(x(d.time));
+							y0 = y(d.category);
+							x1 = getPreviousRootPosition(updateRootsSel, i) + y(d.category);
+							y1 = y0;
+							cpx = x1 + ((x0 - x1) * .5);
+							cpy = y(d.category);
+						}
 						path.moveTo(x0, y0);
 						path.quadraticCurveTo(cpx, cpy, x1, y1);
 						return path;
@@ -1058,8 +1067,8 @@ function realTimeChartMulti() {
 			${content}
 			${/* TODO: ${votes_arr} */""}
 			`;
-			// ${construction}
 		}
+		// ${construction}
 
 		function getSlotWidth(d) {
 			let t1 = x(d.time),
@@ -1350,22 +1359,22 @@ function realTimeChartMulti() {
 	}
 
 	chart.update = function (store) {
-		for (const datum of data) {
-			switch (datum.category) {
+		for (const d of data) {
+			switch (d.category) {
 				case "Epochs":
-					if (datum.label >= store.nextEpochTransition) datum.status = "scheduled";
-					else if (datum.label < store.nextEpochTransition && datum.label > store.justifiedEpoch) datum.status = "pending";
-					else if (datum.label <= store.justifiedEpoch && datum.label > store.finalizedEpoch) datum.status = "justified";
-					else if (datum.label <= store.finalizedEpoch) datum.status = "finalized";
+					if (d.label >= store.nextEpochTransition) d.status = "scheduled";
+					else if (d.label < store.nextEpochTransition && d.label > store.justifiedEpoch) d.status = "pending";
+					else if (d.label <= store.justifiedEpoch && d.label > store.finalizedEpoch) d.status = "justified";
+					else if (d.label <= store.finalizedEpoch) d.status = "finalized";
 					break;
 				case "Blocks":
-					if (datum.status === "justified")
-						if (datum.slot <= store.finalizedSlot) datum.status = "finalized";
+					if (d.status === "justified")
+						if (d.slot <= store.finalizedSlot) d.status = "finalized";
 					if (datum.status === "proposed")
-						if (datum.slot > store.finalizedSlot && datum.slot <= store.justifiedSlot) datum.status = "justified";
+						if (d.slot > store.finalizedSlot && d.slot <= store.justifiedSlot) d.status = "justified";
 					break;
 				default:
-					return;	
+					return;
 			}
 		}
 		return chart;

@@ -488,7 +488,7 @@ async function init() {
 	function updateStatusTemplate() {
 		let data = [store];
 		d3.selectAll("#scheduled-slot").data(data).text(d => d.scheduledSlot);
-		d3.selectAll("#scheduled-epoch").data(data).text(d => d.scheduledEpoch);
+		d3.selectAll("#scheduled-epoch").data(data).text(d => d.currentEpoch);
 		d3.selectAll("#head-slot").data(data).text(d => d.headSlot);
 		d3.selectAll("#head-epoch").data(data).text(d => d.headEpoch);
 		d3.selectAll("#head-delta").data(data).text(d => calculateEpochDelta(d.currentEpoch, d.headEpoch, "head"));
