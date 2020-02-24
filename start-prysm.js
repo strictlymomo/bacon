@@ -297,6 +297,7 @@ async function init() {
 					chart.update(store);
 					updateStatusTemplate();
 					chart.datum(createScheduledEpoch(store.scheduledEpoch));
+					updateEpochs();
 				}
 				
 				difference--;
@@ -345,6 +346,7 @@ async function init() {
 				chart.update(store);
 				updateStatusTemplate();
 				chart.datum(createScheduledEpoch(store.scheduledEpoch));
+				updateEpochs();
 			}
 		}
 
@@ -435,6 +437,30 @@ async function init() {
 				eligibleEther: 1 // hack
 			}
 		};
+	}
+
+	function createEpochUpdate(epoch, pData) {
+		let ep_ref = {
+			label: epoch,
+			participation: {
+				globalParticipationRate: 0,
+				votedEther: 0,
+				eligibleEther: 1 // hack
+			}
+		}
+
+		if (pData) {
+			ep_ref.participation.globalParticipationRate = pData.participation.globalParticipationRate;
+			ep_ref.participation.votedEther = parseInt(pData.participation.votedEther);
+			ep_ref.participation.eligibleEther = parseInt(pData.participation.eligibleEther);
+		}
+
+		return ep_ref;
+	}
+
+	async function updateEpochs() {
+		chart.updateEpoch(createEpochUpdate(store.finalizedEpoch, await VALIDATORS.getParticipationForEpoch(store.finalizedEpoch)));
+		chart.updateEpoch(createEpochUpdate(store.justifiedEpoch, await VALIDATORS.getParticipationForEpoch(store.justifiedEpoch)));
 	}
 
 	function setStateFromGenesis() {

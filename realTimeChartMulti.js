@@ -1380,6 +1380,17 @@ function realTimeChartMulti() {
 		return chart;
 	}
 
+	chart.updateEpoch = function(update) {
+		const test = el => el.category === "Epochs" && el.label === update.label,
+			index = data.findIndex(test);
+		if (index && index !== -1) {
+			let target = data[index];
+			target.participation.globalParticipationRate = update.participation.globalParticipationRate;
+			target.participation.votedEther = update.participation.votedEther;
+			target.participation.eligibleEther = update.participation.eligibleEther;
+		}
+	}
+
 	return chart;
 
 } // end realTimeChart function
